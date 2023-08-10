@@ -1,0 +1,19 @@
+{
+"select.field.1": "Please select complete field",
+"select.table.1": "Please select a table first",
+"info": "Find and delete duplicate values in bulk",
+"label.table": "Current Table",
+"label.field": "Field to search",
+"add.btn": "Add field",
+"btn.del": "Delete",
+"btn.find": "Find duplicate records",
+"btn.empty": "No duplicate items found",
+"del.success": "Successfully deleted {{num}} duplicate records",
+"find.total": "Found {{num}} rows of duplicate records in total",
+"del.btn.2": "Delete selected duplicate records",
+"table.top.info": "Different duplicate records are separated by zebra stripes. The checked records will be deleted after clicking the delete button. If you want to see other fields of this row to compare and decide which rows to delete, you can add fixed fields to display them on the left side of the table",
+"table.fixed.field": "Fixed Fields",
+"field.err.5":"Some fields have been deleted. Please select again or rerun to refresh",
+"load_error.1":"After running the project, please get the webview address and paste it into the multidimensional table \"Extended Script\" for use. See: ",
+  "load.guide": "Development Guide"
+}

@@ -1,0 +1,19 @@
+{
+  "select.field.1":"请选择完整字段",
+  "select.table.1":"请先选择table",
+  "info":"查找并批量删除重复值",
+  "label.table":"当前Table",
+  "label.field":"查找字段 ",
+  "add.btn":"增加字段",
+  "btn.del":"删除",
+  "btn.find":"查找重复记录",
+  "btn.empty":"未找到重复项",
+  "del.success":"成功删除{{num}}条重复记录",
+  "find.total":"共找到{{num}}行重复记录",
+  "del.btn.2":"删除所选重复记录",
+  "table.top.info":"不同的重复记录使用斑马纹进行分隔，勾选的记录在点击删除后将被删掉，如果想看这一行的其他字段来权衡比较是否删除哪些行，可以新增固定字段在表格左侧显示出它们",
+  "table.fixed.field":"固定字段",
+  "field.err.5":"某些字段已被删除，请重新选择，或重新运行以刷新",
+  "load_error.1":"运行项目后，请获取 webview 地址，粘贴至多维表格「扩展脚本」中使用。详见：",
+  "load.guide":"开发指南"
+}
