@@ -15,5 +15,6 @@
   "table.fixed.field":"固定字段",
   "field.err.5":"某些字段已被删除，请重新选择，或重新运行以刷新",
   "load_error.1":"运行项目后，请获取 webview 地址，粘贴至多维表格「扩展脚本」中使用。详见：",
+  "remain.records.num":"已删除{{num}}条记录，共{{total}}条记录",
   "load.guide":"开发指南"
 }

@@ -14,6 +14,7 @@
 "table.top.info": "Different duplicate records are separated by zebra stripes. The checked records will be deleted after clicking the delete button. If you want to see other fields of this row to compare and decide which rows to delete, you can add fixed fields to display them on the left side of the table",
 "table.fixed.field": "Fixed Fields",
 "field.err.5":"Some fields have been deleted. Please select again or rerun to refresh",
+"remain.records.num": "{{num}} records have been deleted, a total of {{total}} records",
 "load_error.1":"After running the project, please get the webview address and paste it into the multidimensional table \"Extended Script\" for use. See: ",
   "load.guide": "Development Guide"
 }

@@ -1,4 +1,4 @@
-import { IFieldMeta as FieldMeta, IWidgetField, IWidgetTable, TableMeta, bitable, FieldType } from "@base-open/web-api";
+import { IFieldMeta as FieldMeta, IWidgetField, IWidgetTable, TableMeta, bitable, FieldType } from "@lark-base-open/js-sdk";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Form, Toast, Spin, Tooltip, Button, Col, Row } from "@douyinfe/semi-ui";
 import { IconHelpCircle, IconPlus, IconMinus, IconClose } from "@douyinfe/semi-icons";
@@ -131,7 +131,7 @@ function T() {
   const [loading, setLoading] = useState(false);
   const [toDelete, setToDelete] = useState<ToDelete>();
   const [existing, setExisting] = useState<Existing>();
-
+  const [loadingContent, setLoadingContent] = useState('')
   // 传给table的props，
   const [fieldsValueLists, setFieldsValueLists] = useState<FormFields>();
   const [, f] = useState<any>();
@@ -512,7 +512,7 @@ function T() {
     }
   };
 
-  console.log(tableInfo, fieldInfo);
+  // console.log(tableInfo, fieldInfo);
 
   const onDel = async (del: any) => {
     setLoading(true);
@@ -539,11 +539,11 @@ function T() {
 
   return (
     <div>
-      <br />
-      {t('info')}
-      <br />
-      <br />
-      <Spin size="large" spinning={loading}>
+      <Spin style={{ height: '100vh' }} tip={loadingContent} size="large" spinning={loading}>
+        <br />
+        {t('info')}
+        <br />
+        <br />
         <Form
           labelPosition="left"
           labelAlign="right"
@@ -702,6 +702,8 @@ function T() {
             <br />
             <DelTable
               windowWidth={windowWidth}
+              setLoadingContent={setLoadingContent}
+              setLoading={setLoading}
               getOnDel={onDel}
               key={toDeleteRecordIds.current.join("")}
               defaultToDelRecords={toDeleteRecordIds.current}

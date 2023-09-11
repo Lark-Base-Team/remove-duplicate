@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Table, Button, Checkbox, Form, Toast } from '@douyinfe/semi-ui';
 import { Existing, ToDelete, FormFields, FieldInfo, TableInfo } from './App'
-import { IFieldMeta as FieldMeta, IOpenCellValue, IWidgetField } from "@base-open/web-api";
+import { IFieldMeta as FieldMeta, IOpenCellValue, IWidgetField } from "@lark-base-open/js-sdk";
 import './table.css'
 import { useTranslation } from 'react-i18next';
 
@@ -122,6 +122,8 @@ interface TableProps {
   /** 获得删除所选的行的回调函数 */
   getOnDel: (f: () => Promise<any>) => Promise<any>;
   existing: Existing;
+  setLoadingContent: (arg: string) => any,
+  setLoading: (arg: boolean) => any,
   toDelete: ToDelete;
   tableFieldMetaList: FieldMeta[];
   /** 表达所选的fields关信息 */
@@ -140,8 +142,7 @@ export default function DelTable(props: TableProps) {
   ]);
   const { t } = useTranslation();
   const formApi = useRef<any>();
-  const { windowWidth } = props;
-  const [loading, setLoading] = useState(false);
+  const { windowWidth, setLoading, setLoadingContent } = props;
   const [selectedRowKeys, setSelectedRowKeys] = useState(props.defaultToDelRecords);
   const scroll = { y: 320, x: windowWidth + 100 }; // x: 所有列的宽度总和
   const style = { width: windowWidth, margin: "0 auto" }; // width: 表格的宽度
@@ -151,14 +152,14 @@ export default function DelTable(props: TableProps) {
       return fixedField.field.id === field.id;
     });
   });
-  console.log({ fixedFields, scrollFields });
+  // console.log({ fixedFields, scrollFields });
   /** table展示的所有字段信息 */
   const allFields = [...fixedFields, ...scrollFields];
 
   const columns = getColumns(allFields);
   const data = getData2({ existing: props.existing, toDelete: props.toDelete, allFields });
 
-  console.log({ columns, data });
+  // console.log({ columns, data });
 
   const rowSelection = {
     onChange: (_selectedRowKeys: any) => {
@@ -183,11 +184,28 @@ export default function DelTable(props: TableProps) {
   };
   const onDel = () => {
     props.getOnDel(async () => {
-      let res = await Promise.all(
-        selectedRowKeys.map((re) => props.tableInfo?.table.deleteRecord(re))
-      );
-      Toast.success(t('del.success', { num: selectedRowKeys.length }));
-      return res;
+      // let res = await Promise.all(
+      //   selectedRowKeys.map((re) => props.tableInfo?.table.deleteRecord(re))
+      // );
+      const total = selectedRowKeys.length
+
+      /** 停顿一会再删除 */
+      const sleep = 500
+      /** 一次删除n行 */
+      const step = 500;
+      let delLength = 0
+      for (let index = 0; index < selectedRowKeys.length; index += step) {
+        const records = selectedRowKeys.slice(index, index + step);
+        await props.tableInfo.table.deleteRecords(records)
+        delLength += records.length;
+        setLoadingContent(t('remain.records.num', { total, num: delLength }))
+        await new Promise((resolve) => setTimeout(() => {
+          resolve('')
+        }, sleep))
+      }
+      Toast.success({ content: t('del.success', { num: selectedRowKeys.length }), duration: 3 });
+      setSelectedRowKeys([]);
+      setLoadingContent('')
     });
   };
 
@@ -246,7 +264,7 @@ export default function DelTable(props: TableProps) {
           <div>
             {t('find.total', { num: selectedRowKeys.length })}
           </div>
-          <Button className="bt2" theme="solid" type="secondary" onClick={onDel}>
+          <Button disabled={!selectedRowKeys.length} className="bt2" theme="solid" type="secondary" onClick={onDel}>
             {t('del.btn.2')}
           </Button>
         </div>
@@ -273,7 +291,6 @@ export default function DelTable(props: TableProps) {
       </Form>
       <br />
       <Table
-        loading={loading}
         onRow={handleRow}
         pagination={false}
         columns={columns}
@@ -286,3 +303,5 @@ export default function DelTable(props: TableProps) {
     </div>
   );
 }
+
+
