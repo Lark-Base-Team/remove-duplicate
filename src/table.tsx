@@ -189,13 +189,14 @@ export default function DelTable(props: TableProps) {
       // );
       const total = selectedRowKeys.length
 
-      /** 停顿一会再删除 */
-      const sleep = 500
+      
       /** 一次删除n行 */
-      const step = 500;
+      const step = 5000;
       let delLength = 0
       for (let index = 0; index < selectedRowKeys.length; index += step) {
         const records = selectedRowKeys.slice(index, index + step);
+        /** 停顿一会再删除 */
+        const sleep = records.length
         await props.tableInfo.table.deleteRecords(records)
         delLength += records.length;
         setLoadingContent(t('remain.records.num', { total, num: delLength }))
