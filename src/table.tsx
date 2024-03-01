@@ -1,14 +1,15 @@
 import React, { useRef, useMemo, useState, useEffect } from 'react';
-import { Table, Button, Checkbox, Form, Toast } from '@douyinfe/semi-ui';
-import { Existing, ToDelete, FormFields, FieldInfo, TableInfo } from './App'
-import { IFieldMeta as FieldMeta, IOpenCellValue, IWidgetField } from "@lark-base-open/js-sdk";
+import { Table, Button, Checkbox, Form, Toast, Col, Row, Tooltip } from '@douyinfe/semi-ui';
+import { Existing, ToDelete, FormFields, FieldInfo, TableInfo } from './types'
+import { IFieldMeta as FieldMeta, FieldType, IOpenCellValue, IField } from "@lark-base-open/js-sdk";
 import './table.css'
 import { useTranslation } from 'react-i18next';
+import { IconHelpCircle } from '@douyinfe/semi-icons';
 
 /** 渲染出需要展示的列表 */
 function getColumns(
   f: {
-    field: IWidgetField;
+    field: IField;
     fieldMeta: FieldMeta;
     valueList: any[];
     columnsConfig?: object;
@@ -19,12 +20,20 @@ function getColumns(
       title: fieldMeta.name,
       dataIndex: fieldMeta.id,
       render: (cellValue: IOpenCellValue) => {
+        let renderValue = '';
+        if (fieldMeta.type === FieldType.DateTime || fieldMeta.type === FieldType.CreatedTime || fieldMeta.type === FieldType.ModifiedTime && cellValue) {
+          try {
+            renderValue = new Date(cellValue as any).toString()
+          } catch (error) {
+
+          }
+        }
         if (
           typeof cellValue === "string" ||
           typeof cellValue === "number" ||
           cellValue === null
         ) {
-          return <div className="tableCell">{cellValue}</div>;
+          return <div className="tableCell">{renderValue || cellValue}</div>;
         }
         if (Array.isArray(cellValue)) {
           return (
@@ -74,7 +83,7 @@ function getData2({
   toDelete: ToDelete;
   /** 所有需要被展示的字段相关信息 */
   allFields: {
-    field: IWidgetField;
+    field: IField;
     fieldMeta: FieldMeta;
     valueList: any[];
   }[];
@@ -109,7 +118,7 @@ function getData2({
 
 /** 更多的左侧固定的列表 */
 interface MoreFixedFields {
-  field: IWidgetField;
+  field: IField;
   fieldMeta: FieldMeta;
   valueList: any[];
   columnsConfig: {
@@ -152,14 +161,12 @@ export default function DelTable(props: TableProps) {
       return fixedField.field.id === field.id;
     });
   });
-  // console.log({ fixedFields, scrollFields });
   /** table展示的所有字段信息 */
   const allFields = [...fixedFields, ...scrollFields];
 
   const columns = getColumns(allFields);
   const data = getData2({ existing: props.existing, toDelete: props.toDelete, allFields });
 
-  // console.log({ columns, data });
 
   const rowSelection = {
     onChange: (_selectedRowKeys: any) => {
@@ -189,7 +196,7 @@ export default function DelTable(props: TableProps) {
       // );
       const total = selectedRowKeys.length
 
-      
+
       /** 一次删除n行 */
       const step = 5000;
       let delLength = 0
@@ -257,40 +264,44 @@ export default function DelTable(props: TableProps) {
   return (
     <div className="tableRoot_lkwuf98oij">
       {selectedRowKeys.length > 0 ? (
-        <div style={{
-          display: 'flex',
-          gap: '20px',
-          alignItems: "center"
-        }}>
-          <div>
+        <Row>
+          <Col style={{ height: '32px', textAlign: 'right', display: 'flex', alignItems: 'center', paddingRight: '20px', justifyContent: 'flex-end' }} span={6}>
             {t('find.total', { num: selectedRowKeys.length })}
-          </div>
-          <Button disabled={!selectedRowKeys.length} className="bt2" theme="solid" type="secondary" onClick={onDel}>
-            {t('del.btn.2')}
-          </Button>
-        </div>
+          </Col>
+          <Col span={18}>
+            <Button disabled={!selectedRowKeys.length} className="bt2" theme="solid" type="secondary" onClick={onDel}>
+              {t('del.btn.2')}
+            </Button>
+          </Col>
+        </Row>
       ) : null}
-      <br />
-      <p style={{ fontSize: "14px" }}>
+      {/* <p className='table-desc'>
         {t('table.top.info')}
-      </p>
-      <Form labelPosition="left" labelAlign="right" getFormApi={(e: any) => (formApi.current = e)}>
+      </p> */}
+      <Form wrapperCol={{ span: 16 }}
+        labelCol={{ span: 8 }}
+        labelPosition="left"
+        labelAlign="right"
+        getFormApi={(e: any) => (formApi.current = e)}>
         {Array.isArray(moreFieldsMetaLists) &&
           moreFieldsMetaLists.length > 0 &&
-          props.formFields.sortFieldValueList.fieldMeta.id && (
-            <Form.Select
-              multiple
-              initValue={[props.formFields.sortFieldValueList.fieldMeta.id]}
-              style={{ width: "100%" }}
-              onChange={onSelectMoreFixed}
-              label={t('table.fixed.field')}
-              field="moreFixed"
-            >
-              {moreFieldSelections}
-            </Form.Select>
+          props.formFields.sortFieldValueList.fieldMeta.id && (<Row>
+            <Col span={18}>
+              <Form.Select
+                multiple
+                initValue={[props.formFields.sortFieldValueList.fieldMeta.id]}
+                style={{ width: "100%" }}
+                onChange={onSelectMoreFixed}
+                label={<div className="help-field-label">{t('table.fixed.field')} {<Tooltip position='right' content={t('find.field.help', { t: t('label.field') })}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>}</div>}
+                field="moreFixed"
+              >
+                {moreFieldSelections}
+              </Form.Select>
+            </Col>
+            <Col span={6}></Col>
+          </Row>
           )}
       </Form>
-      <br />
       <Table
         onRow={handleRow}
         pagination={false}
