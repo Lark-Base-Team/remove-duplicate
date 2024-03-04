@@ -245,3 +245,10 @@ html .semi-select-option-icon {
     line-height: 1.5;
     margin-top: 8px;
 }
+
+
+.semi-form-field[x-label-pos=left] .semi-form-field-label{
+    width: 100%;
+    white-space: wrap;
+}
+

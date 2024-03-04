@@ -292,7 +292,7 @@ export default function DelTable(props: TableProps) {
                 initValue={[props.formFields.sortFieldValueList.fieldMeta.id]}
                 style={{ width: "100%" }}
                 onChange={onSelectMoreFixed}
-                label={<div className="help-field-label">{t('table.fixed.field')} {<Tooltip position='right' content={t('find.field.help', { t: t('label.field') })}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>}</div>}
+                label={<div className="help-field-label">{t('table.fixed.field')} {<Tooltip position='right' content={t('table.top.info')}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>}</div>}
                 field="moreFixed"
               >
                 {moreFieldSelections}
