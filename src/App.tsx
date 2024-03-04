@@ -391,6 +391,7 @@ function T() {
                 style={{ width: "100%" }}
                 onChange={onSelectTable}
                 label={t('label.table')}
+                filter
                 field="table"
               >
                 {Array.isArray(tableInfo?.tableMetaList) &&
@@ -409,6 +410,7 @@ function T() {
               <Form.Select
                 style={{ width: "100%" }}
                 onChange={onSelectField}
+                filter
                 label={<div className="help-field-label">{t('label.field')} {<Tooltip content={t('find.field.help', { t: t('label.field') })}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>}</div>}
                 field="firstCompareFieldId"
               >
@@ -486,6 +488,7 @@ function T() {
                     style={{ width: "100%" }}
                     onChange={onSelectField}
                     label={`     `}
+                    filter
                     field={v}
                   >
                     {fieldMetas.map(({ id, name }) => (
@@ -547,7 +550,7 @@ function T() {
           </Row>
           <Row style={{ display: (saveByField === CompareType.SaveBySmaller || saveByField === CompareType.SaveByBiggerField) ? 'flex' : 'none' }}>
             <Col span={18}>
-              <Form.Select style={{ width: "100%" }} field="compareFieldId" label={t('compareField.label')}>
+              <Form.Select filter style={{ width: "100%" }} field="compareFieldId" label={t('compareField.label')}>
                 {fieldMetas.filter((v) => NumberTypeField.includes(v.type)).map(({ id, name }) => (
                   <Form.Select.Option key={id} value={id}>
                     {name}
