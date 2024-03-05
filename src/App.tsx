@@ -1,6 +1,6 @@
-import { IFieldMeta as FieldMeta, IField, ITable, ITableMeta, bitable, FieldType, IFilterInfo, FilterOperator, FilterConjunction, IGridView } from "@lark-base-open/js-sdk";
+import { IFieldMeta as FieldMeta, IField, ITable, ITableMeta, bitable, FieldType, IFilterInfo, FilterOperator, FilterConjunction, IGridView, ViewType } from "@lark-base-open/js-sdk";
 import { useEffect, useState, useRef, useMemo } from "react";
-import { Form, Toast, Spin, Tooltip, Button, Col, Row } from "@douyinfe/semi-ui";
+import { Form, Toast, Spin, Tooltip, Button, Col, Row, Checkbox } from "@douyinfe/semi-ui";
 import { IconHelpCircle, IconPlus, IconMinus, IconClose } from "@douyinfe/semi-icons";
 import DelTable from "./table";
 import { useTranslation } from 'react-i18next';
@@ -71,6 +71,12 @@ function T() {
   const [toDelete, setToDelete] = useState<ToDelete>();
   const [existing, setExisting] = useState<Existing>();
   const [loadingContent, setLoadingContent] = useState('')
+
+  const checkboxConfig = useRef({ findInCurrentView: true })
+
+  const currentViewConfig = useRef({
+    currentViewRecords: ['']
+  })
 
   const [saveByField, setSaveByField] = useState('');
   // 传给table的props，
@@ -158,6 +164,25 @@ function T() {
         } = formApi.current.getValues();
         const table = await bitable.base.getTableById(selectTableId);
 
+        const findInCurrentView = checkboxConfig.current.findInCurrentView;
+        if (findInCurrentView) {
+          const { viewId } = await bitable.base.getSelection();
+          if (!viewId) {
+            throw t('请打开一个表格视图')
+          }
+          const view = await table.getViewById(viewId!)
+          const viewType = await view.getType()
+
+          if (viewType !== ViewType.Grid) {
+            throw t('请打开一个表格视图')
+          }
+
+          const viewRecordsList = await view.getVisibleRecordIdList();
+
+          currentViewConfig.current = {
+            currentViewRecords: viewRecordsList as any
+          }
+        }
 
         /** 所有的比较字段 */
         restFields = JSON.parse(JSON.stringify(restFields));
@@ -203,7 +228,14 @@ function T() {
         //sortFieldValueList:firstCompareFieldId，用来比较的字段的值列表, identifyingFieldsValueList：其余查找字段值列表数组
         const [sortFieldValueList, ...identifyingFieldsValueList] = await Promise.all([
           sortField?.getFieldValueList?.(),
-          ...findFields.map((f) => f?.getFieldValueList()!),
+          ...findFields.map(async (f) => {
+            const valueList = await f?.getFieldValueList()!
+            if (findInCurrentView) {
+              return valueList.filter(({ record_id }) => currentViewConfig.current.currentViewRecords.includes(record_id as any))
+            }
+
+            return valueList
+          }),
         ]);
 
         setFieldsValueLists({
@@ -565,6 +597,21 @@ function T() {
         <Row>
           <Col span={6}></Col>
           <Col span={18}>
+            <Checkbox
+              defaultChecked={checkboxConfig.current.findInCurrentView}
+              onChange={(e) => {
+                checkboxConfig.current = {
+                  ...checkboxConfig.current,
+                  findInCurrentView: !!e.target.checked
+                }
+              }}>{t('find.in.current.view')}</Checkbox>
+          </Col>
+        </Row>
+        <div className="field-row-divider"></div>
+
+        <Row>
+          <Col span={6}></Col>
+          <Col span={18}>
             <Button theme="solid" type="primary" className="bt1" onClick={deletepriview}>
               {t('btn.find')}
             </Button>
@@ -585,6 +632,8 @@ function T() {
               formFields={fieldsValueLists}
               fieldInfo={fieldInfo}
               tableInfo={tableInfo}
+              viewRecordsList={currentViewConfig.current.currentViewRecords}
+              findInView={checkboxConfig.current.findInCurrentView}
             ></DelTable></div>
         ) : (
           toDelete === undefined ? null : <div>{t('btn.empty')}</div>

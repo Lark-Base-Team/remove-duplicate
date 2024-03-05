@@ -28,5 +28,6 @@
   "save.by.label": "按此规则保留",
   "compareField.label": "自定义比较字段",
   "CompareType.SaveByBiggerField.label": "保留自定义字段较大的记录",
-  "CompareType.SaveBySmaller.label": "保留自定义字段较小的记录"
+  "CompareType.SaveBySmaller.label": "保留自定义字段较小的记录",
+  "find.in.current.view": "在当前视图内查找"
 }

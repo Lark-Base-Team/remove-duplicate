@@ -247,9 +247,21 @@ html .semi-select-option-icon {
     margin-top: 8px;
 }
 
-
-.semi-form-field[x-label-pos=left] .semi-form-field-label{
+.semi-form-field[x-label-pos="left"] .semi-form-field-label {
     width: 100%;
     white-space: wrap;
 }
 
+.field-row-divider {
+    height: 32px;
+}
+
+.table-row-selection-container {
+    display: flex;
+    gap: 5px;
+}
+
+.table-row-selection-container-rowId {
+    font-size: 12px;
+    color: #8f959e;
+}

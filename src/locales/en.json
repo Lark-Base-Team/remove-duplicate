@@ -28,5 +28,6 @@
   "save.by.label": "Keep according to this rule",
   "compareField.label": "Custom Comparison Field",
   "CompareType.SaveByBiggerField.label": "Keep records with a larger value in the custom field",
-  "CompareType.SaveBySmaller.label": "Keep records with a smaller value in the custom field"
+  "CompareType.SaveBySmaller.label": "Keep records with a smaller value in the custom field",
+  "find.in.current.view": "Find within the current view"
 }

@@ -142,6 +142,9 @@ interface TableProps {
   /** 默认要被删除的行， */
   defaultToDelRecords: string[];
   windowWidth: number;
+
+  findInView: boolean;
+  viewRecordsList: string[]
 }
 
 export default function DelTable(props: TableProps) {
@@ -174,6 +177,12 @@ export default function DelTable(props: TableProps) {
     },
     selectedRowKeys,
     fixed: true,
+    renderCell: props.findInView ? (p: any) => {
+      const recordId = p.record.key
+      return <div className='table-row-selection-container'>
+        {p.originNode} <span className='table-row-selection-container-rowId'>{recordId && props.viewRecordsList.indexOf(recordId) + 1}</span>
+      </div>
+    } : undefined
   };
 
   const handleRow = (record: any) => {
