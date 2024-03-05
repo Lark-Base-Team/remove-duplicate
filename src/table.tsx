@@ -265,7 +265,7 @@ export default function DelTable(props: TableProps) {
     <div className="tableRoot_lkwuf98oij">
       {selectedRowKeys.length > 0 ? (
         <Row>
-          <Col style={{ height: '32px', textAlign: 'right', display: 'flex', alignItems: 'center', paddingRight: '20px', justifyContent: 'flex-end' }} span={6}>
+          <Col style={{ height: '32px', textAlign: 'right', display: 'flex', alignItems: 'center', paddingRight: '20px', justifyContent: 'flex-end', gap: '4px' }} span={6}>
             {t('find.total', { num: selectedRowKeys.length })}
             <Tooltip position='right' content={t('table.top.info')}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>
           </Col>
@@ -293,7 +293,7 @@ export default function DelTable(props: TableProps) {
                 initValue={[props.formFields.sortFieldValueList.fieldMeta.id]}
                 style={{ width: "100%" }}
                 onChange={onSelectMoreFixed}
-                label={<div className="help-field-label">{t('table.fixed.field')}</div>}
+                label={<div className="help-field-label">{t('table.fixed.field')}<Tooltip position='right' content={t('table.fixed.field.help')}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip></div>}
                 field="moreFixed"
               >
                 {moreFieldSelections}
