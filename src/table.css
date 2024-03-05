@@ -231,6 +231,7 @@ html .semi-select-option-icon {
     display: flex;
     align-items: center;
     gap: 4px;
+    justify-content: flex-end;
 }
 
 .semi-table-virtualized .semi-table-tbody > .semi-table-row > .semi-table-row-cell {

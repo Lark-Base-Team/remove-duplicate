@@ -411,7 +411,7 @@ function T() {
                 style={{ width: "100%" }}
                 onChange={onSelectField}
                 filter
-                label={<div className="help-field-label">{t('label.field')} {<Tooltip content={t('find.field.help', { t: t('label.field') })}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>}</div>}
+                label={<div className="help-field-label">{t('label.field')} {<Tooltip position="right" content={t('find.field.help', { t: t('label.field') })}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>}</div>}
                 field="firstCompareFieldId"
               >
                 {fieldMetas.map(({ id, name }) => (

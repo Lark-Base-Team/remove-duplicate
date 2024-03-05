@@ -1,7 +1,7 @@
 {
   "select.field.1": "Please select a complete field",
   "select.table.1": "Please select a table first",
-  "info": "Find and delete duplicate values in bulk",
+  "info": "Find and delete duplicate records in bulk",
   "label.table": "Current Table",
   "label.field": "Search Field",
   "add.btn": "Add Field",
@@ -24,7 +24,7 @@
   "CompareType.SaveByRecentEdit.label": "Keep the most recently edited",
   "CompareType.SaveByOlderEdit.label": "Keep the older edits",
   "CompareType.SaveByCompletion.desc": "Keep the record with higher field completeness (i.e., each field is not empty), and select the one with lower completeness; if the completeness is the same, keep the most recently edited record",
-  "save.by.label": "Keep according to this rule:",
+  "save.by.label": "Keep according to this rule",
   "compareField.label": "Custom Comparison Field",
   "CompareType.SaveByBiggerField.label": "Keep records with a larger value in the custom field",
   "CompareType.SaveBySmaller.label": "Keep records with a smaller value in the custom field"

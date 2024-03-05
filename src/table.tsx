@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { Table, Button, Checkbox, Form, Toast, Col, Row, Tooltip } from '@douyinfe/semi-ui';
 import { Existing, ToDelete, FormFields, FieldInfo, TableInfo } from './types'
 import { IFieldMeta as FieldMeta, FieldType, IOpenCellValue, IField } from "@lark-base-open/js-sdk";
@@ -267,6 +267,7 @@ export default function DelTable(props: TableProps) {
         <Row>
           <Col style={{ height: '32px', textAlign: 'right', display: 'flex', alignItems: 'center', paddingRight: '20px', justifyContent: 'flex-end' }} span={6}>
             {t('find.total', { num: selectedRowKeys.length })}
+            <Tooltip position='right' content={t('table.top.info')}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>
           </Col>
           <Col span={18}>
             <Button disabled={!selectedRowKeys.length} className="bt2" theme="solid" type="secondary" onClick={onDel}>
@@ -292,7 +293,7 @@ export default function DelTable(props: TableProps) {
                 initValue={[props.formFields.sortFieldValueList.fieldMeta.id]}
                 style={{ width: "100%" }}
                 onChange={onSelectMoreFixed}
-                label={<div className="help-field-label">{t('table.fixed.field')} {<Tooltip position='right' content={t('table.top.info')}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>}</div>}
+                label={<div className="help-field-label">{t('table.fixed.field')}</div>}
                 field="moreFixed"
               >
                 {moreFieldSelections}
