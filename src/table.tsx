@@ -78,9 +78,13 @@ function getData2({
   existing,
   toDelete,
   allFields,
+  viewRecordsList,
+  selectedRowKeys
 }: {
   existing: Existing;
   toDelete: ToDelete;
+  selectedRowKeys: string[];
+  viewRecordsList: string[];
   /** 所有需要被展示的字段相关信息 */
   allFields: {
     field: IField;
@@ -93,7 +97,15 @@ function getData2({
   let c = 1;
   for (const key in toDelete) {
     const sameValueRecordIdArr: string[] = [existing[key]].concat(toDelete[key]);
-    sameValueRecordIdArr.forEach((recordId) => {
+    sameValueRecordIdArr.sort((a, b) => {
+      if (!selectedRowKeys.includes(a)) {
+        return -1;
+      }
+      if (!selectedRowKeys.includes(b)) {
+        return 1;
+      }
+      return viewRecordsList.indexOf(a) - viewRecordsList.indexOf(b)
+    }).forEach((recordId) => {
       const r = {
         key: recordId,
       };
@@ -168,7 +180,7 @@ export default function DelTable(props: TableProps) {
   const allFields = [...fixedFields, ...scrollFields];
 
   const columns = getColumns(allFields);
-  const data = getData2({ existing: props.existing, toDelete: props.toDelete, allFields });
+  const data = getData2({ existing: props.existing, toDelete: props.toDelete, allFields, viewRecordsList: props.viewRecordsList, selectedRowKeys });
 
 
   const rowSelection = {
@@ -177,6 +189,7 @@ export default function DelTable(props: TableProps) {
     },
     selectedRowKeys,
     fixed: true,
+    columnWidth: 80,
     renderCell: props.findInView ? (p: any) => {
       const recordId = p.record.key
       return <div className='table-row-selection-container'>

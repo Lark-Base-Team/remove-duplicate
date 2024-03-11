@@ -29,5 +29,7 @@
   "compareField.label": "Custom Comparison Field",
   "CompareType.SaveByBiggerField.label": "Keep records with a larger value in the custom field",
   "CompareType.SaveBySmaller.label": "Keep records with a smaller value in the custom field",
-  "find.in.current.view": "Find within the current view"
+  "find.in.current.view": "Find within the current view",
+  "CompareType.SaveByBiggerField.label.desc":"Select a certain field a, and among these same records, keep the record with the larger value of field a",
+  "CompareType.SaveBySmaller.label.desc":"Select a certain field a, and among these same records, keep the record with a smaller value for field a"
 }

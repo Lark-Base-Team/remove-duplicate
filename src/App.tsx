@@ -568,12 +568,17 @@ function T() {
 
                 <Form.Select.Option value={CompareType.SaveByBiggerField}>
                   {/* 保留自定义较大的字段 */}
-                  {t('CompareType.SaveByBiggerField.label')}
+                  <div className="optionWithHelpIcon">
+                    {t('CompareType.SaveByBiggerField.label')}<Tooltip content={t('CompareType.SaveByBiggerField.label.desc')}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>
+                  </div>
                 </Form.Select.Option>
 
                 <Form.Select.Option value={CompareType.SaveBySmaller}>
                   {/* 保留自定义较小的字段 */}
-                  {t('CompareType.SaveBySmaller.label')}
+                  <div className="optionWithHelpIcon">
+                    {t('CompareType.SaveBySmaller.label')}<Tooltip content={t('CompareType.SaveBySmaller.label.desc')}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>
+                  </div>
+
                 </Form.Select.Option>
 
               </Form.Select>

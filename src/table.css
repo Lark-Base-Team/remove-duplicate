@@ -265,3 +265,6 @@ html .semi-select-option-icon {
     font-size: 12px;
     color: #8f959e;
 }
+.semi-table .semi-table-column-selection{
+    width: 90px !important;
+}
