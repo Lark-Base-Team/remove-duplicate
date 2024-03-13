@@ -1,8 +1,8 @@
 {
   "select.field.1": "请选择完整字段",
-  "select.table.1": "请先选择table",
+  "select.table.1": "请先选择数据表",
   "info": "查找并批量删除重复的记录",
-  "label.table": "当前Table",
+  "label.table": "当前数据表",
   "label.field": "查找字段",
   "add.btn": "增加字段",
   "btn.del": "删除",
