@@ -9,6 +9,7 @@
     --diff-bg-color-1: rgb(240, 240, 240);
     /* 斑马纹2 */
     --diff-bg-color: white;
+    margin-top: 48px;
 }
 .semi-table-tbody > .semi-table-row:hover > .semi-table-row-cell.semi-table-cell-fixed-left::before,
 .semi-table-tbody
@@ -24,14 +25,9 @@
     background-image: none;
 }
 
-.tableCell{
+.tableCell {
     overflow: auto;
 }
-
-
-
-
-
 
 body {
     margin: 20px;
@@ -189,6 +185,7 @@ html .semi-select-option-selected,
 html .semi-select-option-focused {
     font-weight: 400;
     color: #1456f0;
+    justify-content: space-between;
 }
 html .semi-select-option-selected .icon path,
 html .semi-select-option-focused .icon path {
@@ -219,6 +216,55 @@ html .semi-button-disabled:not(.semi-button-borderless):not(.semi-button-light):
     color: white;
 }
 
-html .semi-select-option-icon{
-  order: 2;
+html .semi-select-option-icon {
+    order: 2;
+}
+
+.optionWithHelpIcon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    order: 1;
+}
+
+.help-field-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: flex-end;
+}
+
+.semi-table-virtualized .semi-table-tbody > .semi-table-row > .semi-table-row-cell {
+    white-space: wrap;
+}
+
+.table-desc {
+    border-left: 3px solid gainsboro;
+    padding-left: 8px;
+    color: #888888;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-top: 8px;
+}
+
+.semi-form-field[x-label-pos="left"] .semi-form-field-label {
+    width: 100%;
+    white-space: wrap;
+}
+
+.field-row-divider {
+    height: 32px;
+}
+
+.table-row-selection-container {
+    display: flex;
+    gap: 5px;
+}
+
+.table-row-selection-container-rowId {
+    font-size: 12px;
+    color: #8f959e;
+}
+.semi-table .semi-table-column-selection{
+    width: 90px !important;
 }
