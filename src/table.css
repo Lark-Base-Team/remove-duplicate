@@ -3,7 +3,9 @@
     background-color: var(--diff-bg-color);
     background-image: none;
 }
-
+body {
+  background: #fff;
+}
 .tableRoot_lkwuf98oij {
     /* 斑马纹1 */
     --diff-bg-color-1: rgb(240, 240, 240);
