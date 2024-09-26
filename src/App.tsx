@@ -177,7 +177,21 @@ function T() {
             throw t('请打开一个表格视图')
           }
 
-          const viewRecordsList = await view.getVisibleRecordIdList();
+          const viewRecordsList = await (async (table: any) => {
+            let recordIdData;
+            let token = undefined as any;
+            // setLoading(true);
+            const recordIdList = []
+            do {
+              recordIdData = await table.getVisibleRecordIdListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
+              token = recordIdData.pageToken;
+              // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
+              recordIdList.push(...recordIdData.recordIds)
+
+            } while (recordIdData.hasMore);
+            // setLoading(false);
+            return recordIdList
+          })(view);
 
           currentViewConfig.current = {
             currentViewRecords: viewRecordsList as any
@@ -227,9 +241,37 @@ function T() {
         const sortField = currentFieldList.find(({ id }) => id === firstCompareFieldId)! || currentFieldList[0];
         //sortFieldValueList:firstCompareFieldId，用来比较的字段的值列表, identifyingFieldsValueList：其余查找字段值列表数组
         const [sortFieldValueList, ...identifyingFieldsValueList] = await Promise.all([
-          sortField?.getFieldValueList?.(),
+          (async (table: any) => {
+            let recordIdData;
+            let token = undefined as any;
+            // setLoading(true);
+            const recordIdList = []
+            do {
+              recordIdData = await table.getFieldValueListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
+              token = recordIdData.pageToken;
+              // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
+              recordIdList.push(...recordIdData.fieldValues.map((v: any) => { v.record_id = v.recordId; return v }))
+
+            } while (recordIdData.hasMore);
+            // setLoading(false);
+            return recordIdList
+          })(sortField),
           ...findFields.map(async (f) => {
-            const valueList = await f?.getFieldValueList()!
+            const valueList = await (async (table: any) => {
+              let recordIdData;
+              let token = undefined as any;
+              // setLoading(true);
+              const recordIdList = []
+              do {
+                recordIdData = await table.getFieldValueListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
+                token = recordIdData.pageToken;
+                // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
+                recordIdList.push(...recordIdData.fieldValues.map((v: any) => { v.record_id = v.recordId; return v }))
+
+              } while (recordIdData.hasMore);
+              // setLoading(false);
+              return recordIdList
+            })(f)
             if (findInCurrentView) {
               return valueList.filter(({ record_id }) => currentViewConfig.current.currentViewRecords.includes(record_id as any))
             }
@@ -304,6 +346,8 @@ function T() {
             await task()
           }
         } catch (error) {
+          console.log(error,1);
+          
           Toast.error(JSON.stringify(error))
         }
 
@@ -315,6 +359,8 @@ function T() {
               toDelModifiedField.current = undefined
             }
           } catch (e) {
+            console.log(e, 2);
+            
             console.error(e);
           }
         })
@@ -323,6 +369,8 @@ function T() {
         setExisting(existing);
         setLoading(false);
       } catch (error) {
+        console.log(3, error);
+        
         console.error(error)
         Toast.error(JSON.stringify(error))
 

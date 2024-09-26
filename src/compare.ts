@@ -60,7 +60,21 @@ export async function chooseLatestRecord(info: ICompareFuncProps) {
   if (fieldListsExFindFields?.length && !Object.keys(SaveLatestRecordCacheInfo.exFieldsValueIdList).length) {
     /** 除查找字段之外的字段的值列表；用于比较它们的完整度 */
     await Promise.allSettled(fieldListsExFindFields?.map(async (f) => {
-      const valueList = await f.getFieldValueList();
+      const valueList = await (async (table: any) => {
+        let recordIdData;
+        let token = undefined as any;
+        // setLoading(true);
+        const recordIdList = []
+        do {
+          recordIdData = await table.getFieldValueListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
+          token = recordIdData.pageToken;
+          // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
+          recordIdList.push(...recordIdData.fieldValues.map((v: any) => { v.record_id = v.recordId; return v }))
+
+        } while (recordIdData.hasMore);
+        // setLoading(false);
+        return recordIdList
+      })(f);
       SaveLatestRecordCacheInfo!.exFieldsValueIdList[f.id] = valueList.map(({ record_id }) => record_id) as any;
       return {
         fieldId: f.id,
@@ -107,7 +121,21 @@ export async function chooseLatestRecord(info: ICompareFuncProps) {
           toDelModifiedField.current = modifiedFieldId
         }
         const modifiedField = await table.getFieldById(modifiedFieldId as any)
-        const modifiedFieldValueList = await modifiedField?.getFieldValueList();
+        const modifiedFieldValueList = await (async (table: any) => {
+          let recordIdData;
+          let token = undefined as any;
+          // setLoading(true);
+          const recordIdList = []
+          do {
+            recordIdData = await table.getFieldValueListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
+            token = recordIdData.pageToken;
+            // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
+            recordIdList.push(...recordIdData.fieldValues.map((v: any) => { v.record_id = v.recordId; return v }))
+
+          } while (recordIdData.hasMore);
+          // setLoading(false);
+          return recordIdList
+        })(modifiedField);
         SaveLatestRecordCacheInfo.modifiedField = modifiedField
         SaveLatestRecordCacheInfo.modifiedFieldValueList = (modifiedFieldValueList || []) as any
       }
@@ -125,6 +153,8 @@ export async function chooseLatestRecord(info: ICompareFuncProps) {
         }
       }
     } catch (error) {
+      console.log(4, error);
+      
       /** 比较行编辑时间失败，只能随便返回一个 */
       return {
         keep: recordA,
@@ -206,7 +236,21 @@ async function saveByNumberTypeField(props: ICompareFuncProps) {
       throw '无法找到创建/编辑时间字段，请手动新增创建/编辑时间字段'
     }
 
-    const valuelist = await field.getFieldValueList();
+    const valuelist = await (async (table: any) => {
+      let recordIdData;
+      let token = undefined as any;
+      // setLoading(true);
+      const recordIdList = []
+      do {
+        recordIdData = await table.getFieldValueListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
+        token = recordIdData.pageToken;
+        // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
+        recordIdList.push(...recordIdData.fieldValues.map((v: any) => { v.record_id = v.recordId; return v }))
+
+      } while (recordIdData.hasMore);
+      // setLoading(false);
+      return recordIdList
+    })(field);
     saveByNumberTypeFieldCacheInfo!.compareFiledValueList = Object.fromEntries(valuelist.map((v) => [v.record_id, v.value]))
   }
   let sortFieldValueList = saveByNumberTypeFieldCacheInfo!.compareFiledValueList

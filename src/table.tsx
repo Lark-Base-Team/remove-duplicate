@@ -25,7 +25,8 @@ function getColumns(
           try {
             renderValue = new Date(cellValue as any).toString()
           } catch (error) {
-
+            console.log(5, error);
+            
           }
         }
         if (
@@ -251,9 +252,23 @@ export default function DelTable(props: TableProps) {
     const arr: MoreFixedFields[] = [];
     await Promise.all(
       fieldIds.map(async (fieldId: string) => {
-        const valueList = await props.fieldInfo.fieldList
-          .find((f) => f.id === fieldId)!
-          .getFieldValueList();
+        const valueList =
+          await (async (table: any) => {
+            let recordIdData;
+            let token = undefined as any;
+            // setLoading(true);
+            const recordIdList = []
+            do {
+              recordIdData = await table.getFieldValueListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
+              token = recordIdData.pageToken;
+              // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
+              recordIdList.push(...recordIdData.fieldValues.map((v: any) => { v.record_id = v.recordId; return v }))
+
+            } while (recordIdData.hasMore);
+            // setLoading(false);
+            return recordIdList
+          })(props.fieldInfo.fieldList
+            .find((f) => f.id === fieldId))
         arr.push({
           field: props.fieldInfo.fieldList.find((f) => f.id === fieldId)!,
           fieldMeta: props.fieldInfo.fieldMetaList.find(({ id }) => id === fieldId)!,
