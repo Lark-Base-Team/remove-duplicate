@@ -1,11 +1,13 @@
-.tableRoot_lkwuf98oij .semi-table-tbody > .semi-table-row > .semi-table-cell-fixed-left,
-.semi-table-tbody > .semi-table-row > .semi-table-cell-fixed-right {
+.tableRoot_lkwuf98oij .semi-table-tbody>.semi-table-row>.semi-table-cell-fixed-left,
+.semi-table-tbody>.semi-table-row>.semi-table-cell-fixed-right {
     background-color: var(--diff-bg-color);
     background-image: none;
 }
+
 body {
-  background: #fff;
+    background: #fff;
 }
+
 .tableRoot_lkwuf98oij {
     /* 斑马纹1 */
     --diff-bg-color-1: rgb(240, 240, 240);
@@ -13,15 +15,15 @@ body {
     --diff-bg-color: white;
     margin-top: 48px;
 }
-.semi-table-tbody > .semi-table-row:hover > .semi-table-row-cell.semi-table-cell-fixed-left::before,
-.semi-table-tbody
-    > .semi-table-row:hover
-    > .semi-table-row-cell.semi-table-cell-fixed-right::before {
+
+.semi-table-tbody>.semi-table-row:hover>.semi-table-row-cell.semi-table-cell-fixed-left::before,
+.semi-table-tbody>.semi-table-row:hover>.semi-table-row-cell.semi-table-cell-fixed-right::before {
     /* 固定列hover时的背景色 */
     background-color: var(--diff-bg-color-1);
     background-image: none;
 }
-.semi-table-tbody > .semi-table-row:hover > .semi-table-row-cell {
+
+.semi-table-tbody>.semi-table-row:hover>.semi-table-row-cell {
     /*非固定列hover时的背景色*/
     background-color: var(--diff-bg-color-1);
     background-image: none;
@@ -37,9 +39,11 @@ body {
     font-size: 14px;
     margin-top: 0;
 }
+
 * {
     font-family: "PingFang SC";
 }
+
 body .semi-form-field-label {
     font-family: "PingFang SC";
 }
@@ -47,13 +51,16 @@ body .semi-form-field-label {
 .container {
     width: 100%;
 }
+
 .semi-select {
     width: 100%;
 }
+
 .container .semi-form-vertical .semi-form-field {
     padding-top: 10px;
     padding-bottom: 10px;
 }
+
 .result p {
     font-size: 16px;
     font-weight: 500;
@@ -77,11 +84,13 @@ html .semi-button-secondary {
     /* hover背景颜色 */
     --semi-color-secondary-hover: white;
 }
+
 html .semi-button {
     font-weight: 400;
     font-family: "PingFang SC";
     border-radius: 6px;
 }
+
 html .semi-button.bt1 {
     padding: 5px 26px;
     background-color: #1456f0;
@@ -91,27 +100,34 @@ html .semi-button.bt1 {
 html .semi-button-primary {
     color: white;
 }
+
 html .semi-button.bt1:active,
 html .semi-button-primary:not(.semi-button-borderless):not(.semi-button-light):active {
     background-color: #0442d2;
 }
+
 html .semi-button.bt1:hover,
 html .semi-button-primary:not(.semi-button-borderless):not(.semi-button-light):hover {
     background-color: #336df4;
 }
+
 html .semi-button.bt2 {
     padding: 5px 12px;
 }
+
 html .semi-button.semi-button-loading.bt1 {
     padding-left: 17px;
     padding-right: 17px;
 }
+
 html .semi-button-secondary:hover {
     --semi-color-secondary-hover: #e0e9ff;
 }
+
 html .semi-button-secondary:active {
     --semi-color-secondary-active: #c2d4ff;
 }
+
 html .semi-button-loading {
     opacity: 0.6;
 }
@@ -120,12 +136,14 @@ html .semi-button-loading {
     width: 15px;
     margin-right: 8px;
 }
+
 .emptyResult {
     padding: 8px 12px;
     background: #f8f9fa;
     border-radius: 6px;
     color: #646a73;
 }
+
 .findBtnContainer {
     position: sticky;
     top: 0;
@@ -153,8 +171,7 @@ html .semi-select-selection-text .icon {
     align-items: center;
 } */
 
-html .semi-select-option-focused {
-}
+html .semi-select-option-focused {}
 
 html .semi-select,
 html .semi-select:active,
@@ -163,6 +180,7 @@ html .semi-input-wrapper {
     border-radius: 6px;
     background-color: white;
 }
+
 html .semi-input-wrapper:hover,
 html .semi-select:hover,
 html .semi-input-wrapper-focus {
@@ -183,35 +201,42 @@ html div {
 html .semi-select-option-list-chosen .semi-select-option-icon {
     order: 2;
 }
+
 html .semi-select-option-selected,
 html .semi-select-option-focused {
     font-weight: 400;
     color: #1456f0;
     justify-content: space-between;
 }
+
 html .semi-select-option-selected .icon path,
 html .semi-select-option-focused .icon path {
     fill: #1456f0;
     stroke-width: 1px;
 }
+
 /* html .semi-select-option-selected svg, */
 html .semi-select-option-selected path {
     fill: #1456f0;
     stroke-width: 1px;
 }
+
 .semi-select-option-text {
     flex-grow: 1;
     align-items: center;
 }
+
 html .semi-form-field-label-text {
     font-weight: 400;
     font-size: 14px;
     line-height: 22px;
     color: #1f2329;
 }
+
 html .semi-button-disabled {
     color: #bbbfc4;
 }
+
 html .semi-button-disabled.bt1,
 html .semi-button-disabled:not(.semi-button-borderless):not(.semi-button-light):hover {
     background-color: #bbbfc4 !important;
@@ -236,7 +261,7 @@ html .semi-select-option-icon {
     justify-content: flex-end;
 }
 
-.semi-table-virtualized .semi-table-tbody > .semi-table-row > .semi-table-row-cell {
+.semi-table-virtualized .semi-table-tbody>.semi-table-row>.semi-table-row-cell {
     white-space: wrap;
 }
 
@@ -267,6 +292,34 @@ html .semi-select-option-icon {
     font-size: 12px;
     color: #8f959e;
 }
-.semi-table .semi-table-column-selection{
+
+.semi-table .semi-table-column-selection {
     width: 90px !important;
+}
+
+.table-row-selection-container-view-detail {
+    // background-color: pink;
+}
+
+.table-row-selection-container-view-detail-icon {
+    font-size: 14px;
+    display: none;
+    cursor: pointer;
+    color: #1890ff;
+    padding-right: 2px;
+    padding-top: 2px;
+}
+
+.semi-table-tbody {
+    .semi-table-row {
+        &:hover {
+            .table-row-selection-container-view-detail-icon {
+                display: block;
+            }
+        }
+    }
+}
+
+.semi-table-tbody>.semi-table-row>.semi-table-row-cell {
+    padding: 12px;
 }

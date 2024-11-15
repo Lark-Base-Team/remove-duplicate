@@ -1,17 +1,19 @@
 import React, { useRef, useState } from 'react';
 import { Table, Button, Checkbox, Form, Toast, Col, Row, Tooltip } from '@douyinfe/semi-ui';
 import { Existing, ToDelete, FormFields, FieldInfo, TableInfo } from './types'
-import { IFieldMeta as FieldMeta, FieldType, IOpenCellValue, IField } from "@lark-base-open/js-sdk";
-import './table.css'
+import { IFieldMeta as FieldMeta, FieldType, IOpenCellValue, IField, bitable } from "@lark-base-open/js-sdk";
+import './table.less'
 import { useTranslation } from 'react-i18next';
-import { IconHelpCircle } from '@douyinfe/semi-icons';
+import { IconEyeOpened, IconHelpCircle } from '@douyinfe/semi-icons';
 
 /** 渲染出需要展示的列表 */
 function getColumns(
   f: {
     field: IField;
     fieldMeta: FieldMeta;
-    valueList: any[];
+    valueList: Map<string, {
+      [fieldId: string]: IOpenCellValue;
+    }>;
     columnsConfig?: object;
   }[]
 ) {
@@ -26,7 +28,7 @@ function getColumns(
             renderValue = new Date(cellValue as any).toString()
           } catch (error) {
             console.log(5, error);
-            
+
           }
         }
         if (
@@ -90,7 +92,9 @@ function getData2({
   allFields: {
     field: IField;
     fieldMeta: FieldMeta;
-    valueList: any[];
+    valueList: Map<string, {
+      [fieldId: string]: IOpenCellValue;
+    }>;
   }[];
 }) {
   const rows: { key: string;[p: string]: any }[] = [];
@@ -114,7 +118,8 @@ function getData2({
         allFields.map(({ valueList, fieldMeta }) => {
           return [
             fieldMeta.id,
-            valueList.find(({ record_id }) => record_id === recordId)?.value || null,
+            // valueList.find(({ record_id }) => record_id === recordId)?.value || null,
+            valueList.get(recordId)?.[fieldMeta.id]
           ];
         })
       );
@@ -133,7 +138,9 @@ function getData2({
 interface MoreFixedFields {
   field: IField;
   fieldMeta: FieldMeta;
-  valueList: any[];
+  valueList: Map<string, {
+    [fieldId: string]: IOpenCellValue;
+  }>;
   columnsConfig: {
     fixed: true;
   };
@@ -155,7 +162,9 @@ interface TableProps {
   /** 默认要被删除的行， */
   defaultToDelRecords: string[];
   windowWidth: number;
-
+  recordIdValueMap: Map<string, {
+    [fieldId: string]: IOpenCellValue;
+  }>;
   findInView: boolean;
   viewRecordsList: string[]
 }
@@ -165,6 +174,7 @@ export default function DelTable(props: TableProps) {
   const [moreFixedFields, setMoreFixedFields] = useState<MoreFixedFields[]>([
     { ...props.formFields.sortFieldValueList, columnsConfig: { fixed: true } },
   ]);
+  const [showDetailRecord, setShowDetailRecord] = useState('');
   const { t } = useTranslation();
   const formApi = useRef<any>();
   const { windowWidth, setLoading, setLoadingContent } = props;
@@ -193,7 +203,20 @@ export default function DelTable(props: TableProps) {
     columnWidth: 80,
     renderCell: props.findInView ? (p: any) => {
       const recordId = p.record.key
-      return <div className='table-row-selection-container'>
+      return <div className={`table-row-selection-container ${showDetailRecord === recordId ? 'table-row-selection-container-view-detail' : ''}`}>
+        <div onClick={() => {
+          setShowDetailRecord(recordId);
+          bitable.ui.showRecordDetailDialog({
+            tableId: props.tableInfo.table.id,
+            recordId
+          }).finally(() => {
+            setShowDetailRecord('');
+          })
+        }}
+          style={{ display: recordId === showDetailRecord ? 'block' : undefined }}
+          className='table-row-selection-container-view-detail-icon'>
+          <IconEyeOpened />
+        </div>
         {p.originNode} <span className='table-row-selection-container-rowId'>{recordId && props.viewRecordsList.indexOf(recordId) + 1}</span>
       </div>
     } : undefined
@@ -252,27 +275,10 @@ export default function DelTable(props: TableProps) {
     const arr: MoreFixedFields[] = [];
     await Promise.all(
       fieldIds.map(async (fieldId: string) => {
-        const valueList =
-          await (async (table: any) => {
-            let recordIdData;
-            let token = undefined as any;
-            // setLoading(true);
-            const recordIdList = []
-            do {
-              recordIdData = await table.getFieldValueListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
-              token = recordIdData.pageToken;
-              // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
-              recordIdList.push(...recordIdData.fieldValues.map((v: any) => { v.record_id = v.recordId; return v }))
-
-            } while (recordIdData.hasMore);
-            // setLoading(false);
-            return recordIdList
-          })(props.fieldInfo.fieldList
-            .find((f) => f.id === fieldId))
         arr.push({
           field: props.fieldInfo.fieldList.find((f) => f.id === fieldId)!,
           fieldMeta: props.fieldInfo.fieldMetaList.find(({ id }) => id === fieldId)!,
-          valueList,
+          valueList: props.recordIdValueMap,
           columnsConfig: {
             fixed: true,
           },

@@ -1,4 +1,4 @@
-import { IFieldMeta as FieldMeta, IField, ITable, ITableMeta, bitable, FieldType, IFilterInfo, FilterOperator, FilterConjunction, IGridView, IFieldMeta } from "@lark-base-open/js-sdk";
+import { IFieldMeta as FieldMeta, IField, ITable, ITableMeta, bitable, FieldType, IFilterInfo, FilterOperator, FilterConjunction, IGridView, IFieldMeta, IOpenCellValue } from "@lark-base-open/js-sdk";
 import { MutableRefObject } from "react";
 
 /** 找出来需要被删除的那些，key为字段值的json格式 */
@@ -42,13 +42,17 @@ export interface FormFields {
   sortFieldValueList: {
     field: IField;
     fieldMeta: FieldMeta;
-    valueList: any[];
+    valueList: Map<string, {
+      [fieldId: string]: IOpenCellValue;
+    }>;
   };
   /** 查找字段值那些列的相关信息 */
   identifyingFieldsValueList: {
     field: IField;
     fieldMeta: FieldMeta;
-    valueList: any[];
+    valueList: Map<string, {
+      [fieldId: string]: IOpenCellValue;
+    }>;
   }[];
 }
 
@@ -106,4 +110,7 @@ export interface ICompareFuncProps {
   compareType: CompareType,
   /** 自定义比较字段 */
   compareFieldId: string,
+  recordsValue: Map<string, {
+    [fieldId: string]: IOpenCellValue;
+  }>
 }

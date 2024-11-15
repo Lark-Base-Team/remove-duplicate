@@ -1,4 +1,4 @@
-import { IFieldMeta as FieldMeta, IField, ITable, ITableMeta, bitable, FieldType, IFilterInfo, FilterOperator, FilterConjunction, IGridView, ViewType } from "@lark-base-open/js-sdk";
+import { IFieldMeta as FieldMeta, IField, ITable, ITableMeta, bitable, FieldType, IFilterInfo, FilterOperator, FilterConjunction, IGridView, ViewType, IView, IGridViewMeta, IOpenCellValue } from "@lark-base-open/js-sdk";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Form, Toast, Spin, Tooltip, Button, Col, Row, Checkbox } from "@douyinfe/semi-ui";
 import { IconHelpCircle, IconPlus, IconMinus, IconClose } from "@douyinfe/semi-icons";
@@ -8,9 +8,27 @@ import { initChoose2CacheInfo, chooseLatestRecord, getCompareRecords } from "./c
 import { getLast8Digits } from "./utils";
 import { ToDelete, Existing, FormFields, TableInfo, FieldInfo, CompareType } from "./types";
 
+//@ts-ignore
+window.bitable = bitable;
 
 const NumberTypeField = [FieldType.Number, FieldType.AutoNumber, FieldType.Currency, FieldType.DateTime, FieldType.Progress, FieldType.Rating, FieldType.CreatedTime, FieldType.ModifiedTime]
+/** 所有记录id - field值列表 */
+const recordidValueMap: Map<string, {
+  [fieldId: string]: IOpenCellValue;
+}> = new Map();
 
+/** 所有需要处理的记录id */
+let viewRecordsList: string[] = [];
+let tableRecordsList: string[] = [];
+
+function getRecordKey(recordId: string, fieldIds: string[]) {
+  const fields = recordidValueMap.get(recordId);
+
+  const k = fieldIds.sort().map((v) => {
+    return fields![v]
+  });
+  return JSON.stringify(k);
+}
 
 /** 表格，字段变化的时候刷新插件 */
 export default function Ap() {
@@ -112,41 +130,80 @@ function T() {
     window.onresize = resize;
   }, []);
 
+  async function init() {
+    const selection = await bitable.base.getSelection();
+    if (selection.tableId) {
+      const [tableRes, tableMetaListRes, tableListRes] = await Promise.all([
+        bitable.base.getTableById(selection.tableId),
+        bitable.base.getTableMetaList(),
+        bitable.base.getTableList(),
+      ]);
+      setTableInfo({
+        table: tableRes,
+        tableMeta: tableMetaListRes.find(({ id }) => tableRes.id === id)!,
+        tableMetaList: tableMetaListRes.filter(({ name }) => name),
+        tableList: tableListRes,
+      });
+      const { table, firstCompareFieldId, saveBy, compareFieldId, ...restFields } = formApi.current.getValues();
+      // 设置表单初始值
+      formApi.current.setValues({
+        ...formApi.current.getValues(),
+        table: table ?? tableRes.id,
+        saveBy: saveBy ?? CompareType.SaveByCompletion
+      });
+
+      const fieldMetaList = await tableRes.getFieldMetaList();
+      const fieldList = await tableRes.getFieldList();
+      setFieldInfo({
+        fieldList,
+        fieldMetaList,
+        field: undefined,
+        fieldMeta: undefined,
+      });
+    }
+  }
   // 初始化
   useEffect(() => {
-    async function init() {
-      const selection = await bitable.base.getSelection();
-      if (selection.tableId) {
-        const [tableRes, tableMetaListRes, tableListRes] = await Promise.all([
-          bitable.base.getTableById(selection.tableId),
-          bitable.base.getTableMetaList(),
-          bitable.base.getTableList(),
-        ]);
-        setTableInfo({
-          table: tableRes,
-          tableMeta: tableMetaListRes.find(({ id }) => tableRes.id === id)!,
-          tableMetaList: tableMetaListRes.filter(({ name }) => name),
-          tableList: tableListRes,
-        });
-        // 设置表单初始值
-        formApi.current.setValues({ table: tableRes.id, saveBy: CompareType.SaveByCompletion });
-
-        const fieldMetaList = await tableRes.getFieldMetaList();
-        const fieldList = await tableRes.getFieldList();
-        setFieldInfo({
-          fieldList,
-          fieldMetaList,
-          field: undefined,
-          fieldMeta: undefined,
-        });
-      }
-    }
     init();
   }, []);
 
+  // @ts-ignore
+  window.formApi = formApi.current
+
   /** 点击预览删除 */
   const deletepriview = async () => {
+    await init();
     const { table, firstCompareFieldId, saveBy, compareFieldId, ...restFields } = formApi.current.getValues();
+    switch (saveBy) {
+      case CompareType.SaveByEarliestCreate:
+      case CompareType.SaveByLatestCreate:
+        {
+          const modifyField = fieldInfo?.fieldMetaList.find((f) => f.type === FieldType.CreatedTime);
+          if (!modifyField) {
+            formApi.current.setError('saveBy', `请在多维表格中添加一个“创建时间”字段`);
+            return
+          }
+        }
+
+        break;
+      case CompareType.SaveByOlderEdit:
+      case CompareType.SaveByRecentEdit:
+        {
+          const modifyField = fieldInfo?.fieldMetaList.find((f) => f.type === FieldType.ModifiedTime);
+          if (!modifyField) {
+            formApi.current.setError('saveBy', `请在多维表格中添加一个“最后更新时间”字段`);
+            return
+          }
+        }
+
+        break;
+      default: {
+        formApi.current.setError('saveBy', undefined)
+      }
+        break;
+    }
+    formApi.current.setError('saveBy', undefined);
+
     let keys = Object.keys(restFields);
 
     if ((!keys.length && !firstCompareFieldId) ||
@@ -164,38 +221,68 @@ function T() {
         } = formApi.current.getValues();
         const table = await bitable.base.getTableById(selectTableId);
 
-        const findInCurrentView = checkboxConfig.current.findInCurrentView;
-        if (findInCurrentView) {
-          const { viewId } = await bitable.base.getSelection();
-          if (!viewId) {
-            throw t('请打开一个表格视图')
-          }
-          const view = await table.getViewById(viewId!)
-          const viewType = await view.getType()
+        const { viewId } = await bitable.base.getSelection();
+        if (!viewId) {
+          throw t('请打开一个表格视图')
+        }
+        const view = await table.getViewById(viewId!)
+        const viewType = await view.getType()
 
-          if (viewType !== ViewType.Grid) {
-            throw t('请打开一个表格视图')
-          }
+        if (viewType !== ViewType.Grid) {
+          throw t('请打开一个表格视图')
+        }
 
-          const viewRecordsList = await (async (table: any) => {
-            let recordIdData;
-            let token = undefined as any;
-            // setLoading(true);
-            const recordIdList = []
-            do {
-              recordIdData = await table.getVisibleRecordIdListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
-              token = recordIdData.pageToken;
-              // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
-              recordIdList.push(...recordIdData.recordIds)
+        const viewMeta: IGridViewMeta = (await view.getMeta()) as IGridViewMeta;
 
-            } while (recordIdData.hasMore);
-            // setLoading(false);
-            return recordIdList
-          })(view);
+        const filter = viewMeta.property.filterInfo ?? undefined;
 
-          currentViewConfig.current = {
-            currentViewRecords: viewRecordsList as any
-          }
+
+        tableRecordsList = await (async (table: ITable) => {
+          let token = undefined as any;
+          // setLoading(true);
+          const recordIdList: string[] = [];
+          let hasMore = false;
+          do {
+            const currentPage = await table.getRecordsByPage({
+              pageToken: token,
+              pageSize: 200,
+              filter
+            });
+            token = currentPage.pageToken;
+            hasMore = currentPage.hasMore;
+            setLoadingContent(`${recordIdList.length} / ${currentPage.total}`)
+            currentPage.records.forEach(({ recordId, fields }) => {
+              recordidValueMap.set(recordId, fields);
+              recordIdList.push(recordId)
+            })
+
+          } while (hasMore);
+          // setLoading(false);
+          return recordIdList
+        })(table);
+
+        viewRecordsList = tableRecordsList;
+
+        if (checkboxConfig.current.findInCurrentView) {
+          viewRecordsList = await (async function getTodoRecords(view: IView) {
+            let hasMore = true;
+            let records: string[] = [];
+            let pageToken;
+            while (hasMore) {
+              const currentPage = await view.getVisibleRecordIdListByPage({
+                pageToken,
+              });
+              hasMore = currentPage.hasMore;
+              pageToken = currentPage.pageToken;
+              records.push(...currentPage.recordIds)
+            }
+
+            return records;
+          })(view)
+        }
+
+        currentViewConfig.current = {
+          currentViewRecords: viewRecordsList,
         }
 
         /** 所有的比较字段 */
@@ -205,7 +292,7 @@ function T() {
         const firstCompareFieldId = restFields.firstCompareFieldId ?? restFields[keys[0]]
 
         /**key为cell的值，value为recordId */
-        let existing = Object.create(null);
+        let existing: { [cellValueString: string]: string } = Object.create(null);
         let toDelete: ToDelete = {};
         toDeleteRecordIds.current = [];
 
@@ -240,81 +327,92 @@ function T() {
         /** firstCompareFieldId 第一个用来比较的字段 */
         const sortField = currentFieldList.find(({ id }) => id === firstCompareFieldId)! || currentFieldList[0];
         //sortFieldValueList:firstCompareFieldId，用来比较的字段的值列表, identifyingFieldsValueList：其余查找字段值列表数组
-        const [sortFieldValueList, ...identifyingFieldsValueList] = await Promise.all([
-          (async (table: any) => {
-            let recordIdData;
-            let token = undefined as any;
-            // setLoading(true);
-            const recordIdList = []
-            do {
-              recordIdData = await table.getFieldValueListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
-              token = recordIdData.pageToken;
-              // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
-              recordIdList.push(...recordIdData.fieldValues.map((v: any) => { v.record_id = v.recordId; return v }))
+        // const [sortFieldValueList, ...identifyingFieldsValueList] = await Promise.all([
+        //   (async (field: IField) => {
+        //     let recordIdData;
+        //     let token = undefined as any;
+        //     // setLoading(true);
+        //     const recordIdList = []
+        //     do {
+        //       recordIdData = await field.getFieldValueListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
+        //       token = recordIdData.pageToken;
+        //       setLoadingContent(`${recordIdList.length} / ${recordIdData.total}`)
+        //       // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
+        //       recordIdList.push(...recordIdData.fieldValues.map((v: any) => { v.record_id = v.recordId; return v }))
 
-            } while (recordIdData.hasMore);
-            // setLoading(false);
-            return recordIdList
-          })(sortField),
-          ...findFields.map(async (f) => {
-            const valueList = await (async (table: any) => {
-              let recordIdData;
-              let token = undefined as any;
-              // setLoading(true);
-              const recordIdList = []
-              do {
-                recordIdData = await table.getFieldValueListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
-                token = recordIdData.pageToken;
-                // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
-                recordIdList.push(...recordIdData.fieldValues.map((v: any) => { v.record_id = v.recordId; return v }))
+        //     } while (recordIdData.hasMore);
+        //     // setLoading(false);
+        //     return recordIdList
+        //   })(sortField),
+        //   ...findFields.map(async (f) => {
+        //     if (!f) {
+        //       return;
+        //     }
+        //     const valueList = await (async (field: IField) => {
+        //       let recordIdData;
+        //       let token = undefined as any;
+        //       // setLoading(true);
+        //       const recordIdList = []
+        //       do {
+        //         recordIdData = await field.getFieldValueListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
+        //         token = recordIdData.pageToken;
+        //         setLoadingContent(`${recordIdList.length} / ${recordIdData.total}`)
+        //         // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
+        //         recordIdList.push(...recordIdData.fieldValues.map((v: any) => { v.record_id = v.recordId; return v }))
 
-              } while (recordIdData.hasMore);
-              // setLoading(false);
-              return recordIdList
-            })(f)
-            if (findInCurrentView) {
-              return valueList.filter(({ record_id }) => currentViewConfig.current.currentViewRecords.includes(record_id as any))
-            }
+        //       } while (recordIdData.hasMore);
+        //       // setLoading(false);
+        //       return recordIdList
+        //     })(f)
+        //     if (findInCurrentView) {
+        //       return valueList.filter(({ record_id }) => currentViewConfig.current.currentViewRecords.includes(record_id as any))
+        //     }
 
-            return valueList
-          }),
-        ]);
+        //     return valueList
+        //   }),
+        // ]);
 
         setFieldsValueLists({
           sortFieldValueList: {
             field: sortField,
             fieldMeta: currentFieldsMetas.find(({ id }) => sortField.id === id)!,
-            valueList: sortFieldValueList,
+            valueList: recordidValueMap,
           },
           identifyingFieldsValueList: findFields.map((f, index) => {
             return {
               field: f!,
-              valueList: identifyingFieldsValueList[index],
+              valueList: recordidValueMap,
               fieldMeta: currentFieldsMetas.find(({ id }) => f?.id === id)!,
             };
           }),
         });
 
 
-        /** 所有值列表的行id */
-        const allFieldIds = new Set<string>();
-        identifyingFieldsValueList.forEach((v) => {
-          v.forEach(({ record_id }) => {
-            if (record_id) {
-              allFieldIds.add(record_id);
-            }
-          });
-        });
+        // /** 所有值列表的行id */
+        // const allFieldIds = new Set<string>();
+        // identifyingFieldsValueList.forEach((v) => {
+        //   if (!v) {
+        //     return;
+        //   }
+        //   v.forEach(({ record_id }) => {
+        //     if (record_id) {
+        //       allFieldIds.add(record_id);
+        //     }
+        //   });
+        // });
 
         const { beforeCompare, compare: compareRecords, afterCompare } = getCompareRecords({ type: saveBy })
-        beforeCompare()
-        const tasks = [...allFieldIds].map((recordId) => async () => {
-          /** record这一行，字段1和字段2的值 */
-          let key = JSON.stringify([
-            ...identifyingFieldsValueList.map(
-              (f) => f.find(({ record_id }) => record_id === recordId)?.value
-            ),
-          ]);
+        beforeCompare();
+        setLoadingContent(`正在生成对比任务`);
+        const choosedFieldIds = Object.values(restFields);
+        const tasks = viewRecordsList.map((recordId) => async () => {
+          /** record这一行，字段1和字段2的值，将记录的查找字段的值json作为对象的key */
+          // let key = JSON.stringify([
+          //   ...identifyingFieldsValueList.map(
+          //     (f) => f?.find(({ record_id }) => record_id === recordId)?.value
+          //   ),
+          // ]);
+          const key = getRecordKey(recordId, choosedFieldIds)
           if (key in existing) {
 
             const { keep, discard } = await compareRecords({
@@ -322,11 +420,12 @@ function T() {
               recordB: existing[key],
               toDelModifiedField,
               table,
-              choosedFieldIds: Object.values(restFields),
+              choosedFieldIds,
               fieldList: currentFieldList ?? [],
               fieldMetaList: currentFieldsMetas ?? [],
               compareType: saveBy,
-              compareFieldId
+              compareFieldId,
+              recordsValue: recordidValueMap
             });
             toDeleteRecordIds.current.push(discard);
             if (toDelete[key]) {
@@ -341,13 +440,23 @@ function T() {
         })
 
         try {
+          const step = 10;
           for (let index = 0; index < tasks.length; index++) {
-            const task = tasks[index]
+            const task = tasks[index];
             await task()
+            if (index % 10 === 0) {
+              setLoadingContent(`${index} / ${tasks.length}`)
+              await new Promise((r) => {
+                // 休息一会
+                setTimeout(() => {
+                  r(1);
+                }, 0);
+              })
+            }
           }
         } catch (error) {
-          console.log(error,1);
-          
+          console.log(error, 1);
+
           Toast.error(JSON.stringify(error))
         }
 
@@ -360,7 +469,7 @@ function T() {
             }
           } catch (e) {
             console.log(e, 2);
-            
+
             console.error(e);
           }
         })
@@ -370,7 +479,7 @@ function T() {
         setLoading(false);
       } catch (error) {
         console.log(3, error);
-        
+
         console.error(error)
         Toast.error(JSON.stringify(error))
 
@@ -440,6 +549,7 @@ function T() {
     existing &&
     toDelete &&
     fieldInfo?.fieldMetaList &&
+    recordidValueMap.size > 0 &&
     fieldsValueLists &&
     tableInfo &&
     toDeleteRecordIds.current.length > 0;
@@ -487,6 +597,7 @@ function T() {
 
           <Row>
             <Col span={18}>
+              {/* 查找字段 */}
               <Form.Select
                 style={{ width: "100%" }}
                 onChange={onSelectField}
@@ -585,7 +696,10 @@ function T() {
 
           <Row>
             <Col span={18}>
-              <Form.Select onChange={(e) => setSaveByField(e as string)} style={{ width: "100%" }} field="saveBy" label={t('save.by.label')}>
+              <Form.Select onChange={(e) => {
+                formApi.current.setError('saveBy', undefined)
+                setSaveByField(e as string)
+              }} style={{ width: "100%" }} field="saveBy" label={t('save.by.label')}>
 
                 <Form.Select.Option value={CompareType.SaveByCompletion}>
                   {/* 字段完整度高的保留（即各个字段不为空），完整度低的被选中
@@ -651,6 +765,7 @@ function T() {
           <Col span={6}></Col>
           <Col span={18}>
             <Checkbox
+              disabled
               defaultChecked={checkboxConfig.current.findInCurrentView}
               onChange={(e) => {
                 checkboxConfig.current = {
@@ -685,6 +800,7 @@ function T() {
               formFields={fieldsValueLists}
               fieldInfo={fieldInfo}
               tableInfo={tableInfo}
+              recordIdValueMap={recordidValueMap}
               viewRecordsList={currentViewConfig.current.currentViewRecords}
               findInView={checkboxConfig.current.findInCurrentView}
             ></DelTable></div>
