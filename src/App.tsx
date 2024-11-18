@@ -30,10 +30,12 @@ function getRecordKey(recordId: string, fieldIds: string[], config: {
   const fields = recordidValueMap.get(recordId);
   const k = fieldIds.sort().map((v) => {
     let fieldValue = fields![v];
+    if (!fieldValue) {
+      return fieldValue;
+    }
     if (config.fieldIdTypeObj[v] === FieldType.Text) {
       // 多行文本有这4种类型  IOpenTextSegment$1 | IOpenUrlSegment$1 | IOpenUserMentionSegment | IOpenDocumentMentionSegment$1;
       // 分别提取它们的特征属性相加
-      console.log('=====v', fieldValue);
       fieldValue = (fieldValue as IOpenSegment[]).map((v: any) => (v.text ?? '') + (v.link ?? '') + (v.id ?? '') + (v.name ?? '') + (v.token ?? '')).join('')
       if (config.ignoreSpace) {
         fieldValue = fieldValue.replace(/\s/g, '');
@@ -46,7 +48,6 @@ function getRecordKey(recordId: string, fieldIds: string[], config: {
   if (config.ignoreSpace) {
     strKey = strKey.replace(/\s/g, '');
   }
-  console.log('====strKey', strKey);
   return strKey;
 }
 
