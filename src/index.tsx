@@ -7,9 +7,7 @@ import { bitable } from '@lark-base-open/js-sdk'
 import { useTranslation } from 'react-i18next';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <LoadApp />
-  </React.StrictMode>
+  <LoadApp />
 )
 
 

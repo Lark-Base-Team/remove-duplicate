@@ -30,6 +30,7 @@
   "CompareType.SaveByBiggerField.label": "保留自定义字段较大的记录",
   "CompareType.SaveBySmaller.label": "保留自定义字段较小的记录",
   "find.in.current.view": "在当前视图内查找",
+  "find.in.current.ignoreSpace": "忽略空白字符",
   "CompareType.SaveByBiggerField.label.desc":"选定某个字段a，在这些相同的记录中，保留字段a的值较大的那条记录",
   "CompareType.SaveBySmaller.label.desc":"选定某个字段a，在这些相同的记录中，保留字段a的值较小的那条记录"
 }

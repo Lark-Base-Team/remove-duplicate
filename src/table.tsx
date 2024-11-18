@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Table, Button, Checkbox, Form, Toast, Col, Row, Tooltip } from '@douyinfe/semi-ui';
 import { Existing, ToDelete, FormFields, FieldInfo, TableInfo } from './types'
 import { IFieldMeta as FieldMeta, FieldType, IOpenCellValue, IField, bitable } from "@lark-base-open/js-sdk";
@@ -148,6 +148,7 @@ interface MoreFixedFields {
 [];
 
 interface TableProps {
+  resTime: number;
   /** 获得删除所选的行的回调函数 */
   getOnDel: (f: () => Promise<any>) => Promise<any>;
   existing: Existing;
@@ -171,9 +172,12 @@ interface TableProps {
 
 export default function DelTable(props: TableProps) {
   /** 固定列的字段信息 */
-  const [moreFixedFields, setMoreFixedFields] = useState<MoreFixedFields[]>([
-    { ...props.formFields.sortFieldValueList, columnsConfig: { fixed: true } },
-  ]);
+  const [moreFixedFields, setMoreFixedFields] = useState<MoreFixedFields[]>([]);
+  useEffect(() => {
+    setMoreFixedFields([
+      { ...props.formFields.sortFieldValueList, columnsConfig: { fixed: true } },
+    ])
+  }, [])
   const [showDetailRecord, setShowDetailRecord] = useState('');
   const { t } = useTranslation();
   const formApi = useRef<any>();
@@ -191,7 +195,13 @@ export default function DelTable(props: TableProps) {
   const allFields = [...fixedFields, ...scrollFields];
 
   const columns = getColumns(allFields);
-  const data = getData2({ existing: props.existing, toDelete: props.toDelete, allFields, viewRecordsList: props.viewRecordsList, selectedRowKeys });
+  const data = useMemo(() => {
+    props.setLoading(true);
+    const data = getData2({ existing: props.existing, toDelete: props.toDelete, allFields, viewRecordsList: props.viewRecordsList, selectedRowKeys });
+    props.setLoading(false);
+    return data;
+
+  }, [props.resTime, moreFixedFields.length]);
 
 
   const rowSelection = {
@@ -204,6 +214,9 @@ export default function DelTable(props: TableProps) {
     renderCell: props.findInView ? (p: any) => {
       const recordId = p.record.key
       return <div className={`table-row-selection-container ${showDetailRecord === recordId ? 'table-row-selection-container-view-detail' : ''}`}>
+
+        {p.originNode} <span className='table-row-selection-container-rowId'>{recordId && props.viewRecordsList.indexOf(recordId) + 1}</span>
+
         <div onClick={() => {
           setShowDetailRecord(recordId);
           bitable.ui.showRecordDetailDialog({
@@ -217,7 +230,6 @@ export default function DelTable(props: TableProps) {
           className='table-row-selection-container-view-detail-icon'>
           <IconEyeOpened />
         </div>
-        {p.originNode} <span className='table-row-selection-container-rowId'>{recordId && props.viewRecordsList.indexOf(recordId) + 1}</span>
       </div>
     } : undefined
   };

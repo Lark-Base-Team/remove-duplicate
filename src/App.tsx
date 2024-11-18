@@ -1,5 +1,5 @@
-import { IFieldMeta as FieldMeta, IField, ITable, ITableMeta, bitable, FieldType, IFilterInfo, FilterOperator, FilterConjunction, IGridView, ViewType, IView, IGridViewMeta, IOpenCellValue } from "@lark-base-open/js-sdk";
-import { useEffect, useState, useRef, useMemo } from "react";
+import { IFieldMeta as FieldMeta, IField, ITable, ITableMeta, bitable, FieldType, IFilterInfo, FilterOperator, FilterConjunction, IGridView, ViewType, IView, IGridViewMeta, IOpenCellValue, IOpenTextSegment, IOpenSegment } from "@lark-base-open/js-sdk";
+import { useEffect, useState, useRef, useMemo, RefObject } from "react";
 import { Form, Toast, Spin, Tooltip, Button, Col, Row, Checkbox } from "@douyinfe/semi-ui";
 import { IconHelpCircle, IconPlus, IconMinus, IconClose } from "@douyinfe/semi-icons";
 import DelTable from "./table";
@@ -21,13 +21,33 @@ const recordidValueMap: Map<string, {
 let viewRecordsList: string[] = [];
 let tableRecordsList: string[] = [];
 
-function getRecordKey(recordId: string, fieldIds: string[]) {
+function getRecordKey(recordId: string, fieldIds: string[], config: {
+  ignoreSpace: boolean,
+  fieldIdTypeObj: {
+    [k: string]: FieldType;
+  }
+}) {
   const fields = recordidValueMap.get(recordId);
-
   const k = fieldIds.sort().map((v) => {
-    return fields![v]
+    let fieldValue = fields![v];
+    if (config.fieldIdTypeObj[v] === FieldType.Text) {
+      // 多行文本有这4种类型  IOpenTextSegment$1 | IOpenUrlSegment$1 | IOpenUserMentionSegment | IOpenDocumentMentionSegment$1;
+      // 分别提取它们的特征属性相加
+      console.log('=====v', fieldValue);
+      fieldValue = (fieldValue as IOpenSegment[]).map((v: any) => (v.text ?? '') + (v.link ?? '') + (v.id ?? '') + (v.name ?? '') + (v.token ?? '')).join('')
+      if (config.ignoreSpace) {
+        fieldValue = fieldValue.replace(/\s/g, '');
+      }
+    }
+    return fieldValue;
   });
-  return JSON.stringify(k);
+  let strKey = typeof k === 'string' ? k : JSON.stringify(k);
+
+  if (config.ignoreSpace) {
+    strKey = strKey.replace(/\s/g, '');
+  }
+  console.log('====strKey', strKey);
+  return strKey;
 }
 
 /** 表格，字段变化的时候刷新插件 */
@@ -88,9 +108,20 @@ function T() {
   const [loading, setLoading] = useState(false);
   const [toDelete, setToDelete] = useState<ToDelete>();
   const [existing, setExisting] = useState<Existing>();
-  const [loadingContent, setLoadingContent] = useState('')
+  const [loadingContent, setLoadingContent] = useState('');
 
-  const checkboxConfig = useRef({ findInCurrentView: true })
+  /** 查找完成的时间，用来刷新DelTable */
+  const resTime = useRef(new Date().getTime());
+  function setLoadingTextByRef(text: string) {
+    const d: HTMLDivElement = document.querySelector('.query-selector-id-spin div[x-semi-prop="tip"]') as any;
+    if (d) {
+      d.innerText = text;
+      return;
+    }
+    return setLoadingContent(text);
+  }
+
+  const checkboxConfig = useRef({ findInCurrentView: true, ignoreSpace: true })
 
   const currentViewConfig = useRef({
     currentViewRecords: ['']
@@ -132,6 +163,8 @@ function T() {
 
   async function init() {
     const selection = await bitable.base.getSelection();
+    setToDelete(undefined);
+    setExisting(undefined);
     if (selection.tableId) {
       const [tableRes, tableMetaListRes, tableListRes] = await Promise.all([
         bitable.base.getTableById(selection.tableId),
@@ -167,6 +200,9 @@ function T() {
     init();
   }, []);
 
+  const spinRef = useRef<RefObject<Spin>>(null);
+  // @ts-ignore
+  window.spinRef = spinRef;
   // @ts-ignore
   window.formApi = formApi.current
 
@@ -250,7 +286,7 @@ function T() {
             });
             token = currentPage.pageToken;
             hasMore = currentPage.hasMore;
-            setLoadingContent(`${recordIdList.length} / ${currentPage.total}`)
+            setLoadingTextByRef(`getRecords: ${recordIdList.length} / ${currentPage.total}`)
             currentPage.records.forEach(({ recordId, fields }) => {
               recordidValueMap.set(recordId, fields);
               recordIdList.push(recordId)
@@ -303,6 +339,7 @@ function T() {
           .map((f) => currentFieldList.find(({ id }) => id === restFields[f]))
           .filter((v) => v);
         const currentFieldsMetas = (await tableInfo?.table.getFieldMetaList()) || [];
+        const fieldIdTypeObj = Object.fromEntries(currentFieldsMetas.map((v) => [v.id, v.type]))
         const currentFieldIds = currentFieldsMetas.map(({ id }) => id)
         if (findFields.some((f) => {
           return !currentFieldIds.includes(f?.id as any)
@@ -403,7 +440,7 @@ function T() {
 
         const { beforeCompare, compare: compareRecords, afterCompare } = getCompareRecords({ type: saveBy })
         beforeCompare();
-        setLoadingContent(`正在生成对比任务`);
+        setLoadingTextByRef(`正在生成对比任务`);
         const choosedFieldIds = Object.values(restFields);
         const tasks = viewRecordsList.map((recordId) => async () => {
           /** record这一行，字段1和字段2的值，将记录的查找字段的值json作为对象的key */
@@ -412,7 +449,10 @@ function T() {
           //     (f) => f?.find(({ record_id }) => record_id === recordId)?.value
           //   ),
           // ]);
-          const key = getRecordKey(recordId, choosedFieldIds)
+          const key = getRecordKey(recordId, choosedFieldIds, {
+            ignoreSpace: checkboxConfig.current.ignoreSpace,
+            fieldIdTypeObj,
+          })
           if (key in existing) {
 
             const { keep, discard } = await compareRecords({
@@ -445,7 +485,7 @@ function T() {
             const task = tasks[index];
             await task()
             if (index % 10 === 0) {
-              setLoadingContent(`${index} / ${tasks.length}`)
+              setLoadingTextByRef(`tasks: ${index} / ${tasks.length}`)
               await new Promise((r) => {
                 // 休息一会
                 setTimeout(() => {
@@ -476,6 +516,7 @@ function T() {
 
         setToDelete(toDelete);
         setExisting(existing);
+        resTime.current = new Date().getTime();
         setLoading(false);
       } catch (error) {
         console.log(3, error);
@@ -563,7 +604,7 @@ function T() {
 
   return (
     <div>
-      <Spin style={{ height: '100vh' }} tip={loadingContent} size="large" spinning={loading}>
+      <Spin wrapperClassName="query-selector-id-spin" style={{ height: '100vh' }} tip={loadingContent} size="large" spinning={loading}>
         <br />
         {t('info')}
         <br />
@@ -765,6 +806,14 @@ function T() {
           <Col span={6}></Col>
           <Col span={18}>
             <Checkbox
+              defaultChecked={checkboxConfig.current.ignoreSpace}
+              onChange={(e) => {
+                checkboxConfig.current = {
+                  ...checkboxConfig.current,
+                  ignoreSpace: !!e.target.checked
+                }
+              }}>{t('find.in.current.ignoreSpace')}</Checkbox>
+            <Checkbox
               disabled
               defaultChecked={checkboxConfig.current.findInCurrentView}
               onChange={(e) => {
@@ -792,7 +841,7 @@ function T() {
               setLoadingContent={setLoadingContent}
               setLoading={setLoading}
               getOnDel={onDel}
-              key={toDeleteRecordIds.current.join("")}
+              key={resTime.current}
               defaultToDelRecords={toDeleteRecordIds.current}
               existing={existing}
               toDelete={toDelete}
@@ -801,6 +850,7 @@ function T() {
               fieldInfo={fieldInfo}
               tableInfo={tableInfo}
               recordIdValueMap={recordidValueMap}
+              resTime={resTime.current}
               viewRecordsList={currentViewConfig.current.currentViewRecords}
               findInView={checkboxConfig.current.findInCurrentView}
             ></DelTable></div>
