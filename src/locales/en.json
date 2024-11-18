@@ -24,7 +24,7 @@
   "CompareType.SaveByLatestCreate.label": "Keep the most recently created",
   "CompareType.SaveByRecentEdit.label": "Keep the most recently edited",
   "CompareType.SaveByOlderEdit.label": "Keep the older edits",
-  "CompareType.SaveByCompletion.desc": "Keep the record with higher field completeness (i.e., each field is not empty), and select the one with lower completeness; if the completeness is the same, keep the most recently edited record",
+  "CompareType.SaveByCompletion.desc": "The fields with high completeness are retained (that is, each field is not empty), and the fields with low completeness are selected; if the field completeness is the same, one will be randomly retained",
   "save.by.label": "Keep according to this rule",
   "compareField.label": "Custom Comparison Field",
   "CompareType.SaveByBiggerField.label": "Keep records with a larger value in the custom field",

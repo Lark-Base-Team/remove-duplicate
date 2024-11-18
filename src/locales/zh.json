@@ -24,7 +24,7 @@
   "CompareType.SaveByLatestCreate.label": "保留最近创建的",
   "CompareType.SaveByRecentEdit.label": "保留最近编辑过的",
   "CompareType.SaveByOlderEdit.label": "保留较旧的编辑",
-  "CompareType.SaveByCompletion.desc": "字段完整度高的保留（即各个字段不为空），完整度低的被选中; 如字段完整度一样，则保留最近编辑的那条记录",
+  "CompareType.SaveByCompletion.desc": "字段完整度高的保留（即各个字段不为空），完整度低的被选中; 如字段完整度一样，则随机保留一条",
   "save.by.label": "按此规则保留",
   "compareField.label": "自定义比较字段",
   "CompareType.SaveByBiggerField.label": "保留自定义字段较大的记录",
