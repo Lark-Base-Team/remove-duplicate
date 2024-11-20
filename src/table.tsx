@@ -1,10 +1,10 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Table, Button, Checkbox, Form, Toast, Col, Row, Tooltip } from '@douyinfe/semi-ui';
 import { Existing, ToDelete, FormFields, FieldInfo, TableInfo } from './types'
-import { IFieldMeta as FieldMeta, FieldType, IOpenCellValue, IField, bitable } from "@lark-base-open/js-sdk";
+import { IFieldMeta as FieldMeta, FieldType, IOpenCellValue, IField, bitable, PermissionEntity, OperationType } from "@lark-base-open/js-sdk";
 import './table.less'
 import { useTranslation } from 'react-i18next';
-import { IconEyeOpened, IconHelpCircle } from '@douyinfe/semi-icons';
+import { IconAlarm, IconAlertCircle, IconEyeOpened, IconHelpCircle } from '@douyinfe/semi-icons';
 
 /** 渲染出需要展示的列表 */
 function getColumns(
@@ -24,8 +24,11 @@ function getColumns(
       render: (cellValue: IOpenCellValue) => {
         let renderValue = '';
         if (fieldMeta.type === FieldType.DateTime || fieldMeta.type === FieldType.CreatedTime || fieldMeta.type === FieldType.ModifiedTime && cellValue) {
+          if (typeof cellValue !== 'number') {
+            return '';
+          }
           try {
-            renderValue = new Date(cellValue as any).toString()
+            renderValue = new Date(cellValue < 9999999999 ? cellValue * 1000 : cellValue).toString()
           } catch (error) {
             console.log(5, error);
 
@@ -179,6 +182,7 @@ export default function DelTable(props: TableProps) {
     ])
   }, [])
   const [showDetailRecord, setShowDetailRecord] = useState('');
+  const [hasTableDelPermission, setHasTableDelPermission] = useState(false);
   const { t } = useTranslation();
   const formApi = useRef<any>();
   const { windowWidth, setLoading, setLoadingContent } = props;
@@ -186,6 +190,10 @@ export default function DelTable(props: TableProps) {
   const scroll = { y: 320, x: windowWidth + 100 }; // x: 所有列的宽度总和
   const style = { width: windowWidth, margin: "0 auto" }; // width: 表格的宽度
   const fixedFields = moreFixedFields;
+  const [data, setData] = useState<{
+    [p: string]: any;
+    key: string;
+  }[]>([]);
   const scrollFields = props.formFields.identifyingFieldsValueList.filter(({ field }) => {
     return !fixedFields.some((fixedField) => {
       return fixedField.field.id === field.id;
@@ -194,13 +202,32 @@ export default function DelTable(props: TableProps) {
   /** table展示的所有字段信息 */
   const allFields = [...fixedFields, ...scrollFields];
 
-  const columns = getColumns(allFields);
-  const data = useMemo(() => {
+  useEffect(() => {
     props.setLoading(true);
-    const data = getData2({ existing: props.existing, toDelete: props.toDelete, allFields, viewRecordsList: props.viewRecordsList, selectedRowKeys });
-    props.setLoading(false);
-    return data;
+    bitable.base.getPermission({
+      entity: PermissionEntity.Record,
+      param: {
+        tableId: props.tableInfo.table.id,
+      },
+      type: OperationType.Deletable,
 
+    }).then((v) => {
+      if (v) {
+        setHasTableDelPermission(true);
+      }
+    }).finally(() => {
+      props.setLoading(false);
+    })
+  }, [props.tableInfo.table.id])
+
+  const columns = getColumns(allFields);
+  useLayoutEffect(() => {
+    props.setLoading(true);
+    setTimeout(() => {
+      const data = getData2({ existing: props.existing, toDelete: props.toDelete, allFields, viewRecordsList: props.viewRecordsList, selectedRowKeys });
+      props.setLoading(false);
+      setData(data);
+    }, 0);
   }, [props.resTime, moreFixedFields.length]);
 
 
@@ -262,7 +289,25 @@ export default function DelTable(props: TableProps) {
         const records = selectedRowKeys.slice(index, index + step);
         /** 停顿一会再删除 */
         const sleep = records.length
-        await props.tableInfo.table.deleteRecords(records)
+        await props.tableInfo.table.deleteRecords(records).catch((e) => {
+          console.log('error===', e);
+          console.log('records', records);
+          /** 删除这个的时候出问题了
+           [
+    "recujTADBbipn2",
+    "recujTADBb94Hj",
+    "recujTADBbGKXZ",
+    "recujTADBbfQv1",
+    "recujTADBbnwyz",
+    "recujTADBbvlhV",
+    "recujTADBb8NmW",
+    "recujTADBbHvw8",
+    "recujTADBbvy2M",
+    "recujTADBb7Gxw"
+] 
+           
+           */
+        })
         delLength += records.length;
         setLoadingContent(t('remain.records.num', { total, num: delLength }))
         await new Promise((resolve) => setTimeout(() => {
@@ -324,10 +369,13 @@ export default function DelTable(props: TableProps) {
             {t('find.total', { num: selectedRowKeys.length })}
             <Tooltip position='right' content={t('table.top.info')}><IconHelpCircle style={{ color: 'darkgray' }} /></Tooltip>
           </Col>
-          <Col span={18}>
-            <Button disabled={!selectedRowKeys.length} className="bt2" theme="solid" type="secondary" onClick={onDel}>
+          <Col style={{ display: 'flex', alignItems: 'center', gap: '12px' }} span={18}>
+            <Button disabled={!selectedRowKeys.length || !hasTableDelPermission} className="bt2" theme="solid" type="secondary" onClick={onDel}>
               {t('del.btn.2')}
             </Button>
+            {<Tooltip content={t('info.has.no.deletePermission')}>
+              {!hasTableDelPermission && <IconAlertCircle style={{ color: 'red' }} />}
+            </Tooltip>}
           </Col>
         </Row>
       ) : null}

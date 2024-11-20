@@ -1,5 +1,5 @@
 import { IFieldMeta as FieldMeta, IField, ITable, ITableMeta, bitable, FieldType, IFilterInfo, FilterOperator, FilterConjunction, IGridView, ViewType, IView, IGridViewMeta, IOpenCellValue, IOpenTextSegment, IOpenSegment } from "@lark-base-open/js-sdk";
-import { useEffect, useState, useRef, useMemo, RefObject } from "react";
+import { useEffect, useState, useRef, useMemo, RefObject, useLayoutEffect } from "react";
 import { Form, Toast, Spin, Tooltip, Button, Col, Row, Checkbox } from "@douyinfe/semi-ui";
 import { IconHelpCircle, IconPlus, IconMinus, IconClose } from "@douyinfe/semi-icons";
 import DelTable from "./table";
@@ -163,6 +163,7 @@ function T() {
   }, []);
 
   async function init() {
+    setLoading(true);
     const selection = await bitable.base.getSelection();
     setToDelete(undefined);
     setExisting(undefined);
@@ -194,7 +195,8 @@ function T() {
         field: undefined,
         fieldMeta: undefined,
       });
-    }
+    };
+    setLoading(false);
   }
   // 初始化
   useEffect(() => {
@@ -219,6 +221,8 @@ function T() {
           if (!modifyField) {
             formApi.current.setError('saveBy', `请在多维表格中添加一个“创建时间”字段`);
             return
+          } else {
+            formApi.current.setValue('compareFieldId', modifyField.id)
           }
         }
 
@@ -230,6 +234,8 @@ function T() {
           if (!modifyField) {
             formApi.current.setError('saveBy', `请在多维表格中添加一个“最后更新时间”字段`);
             return
+          } else {
+            formApi.current.setValue('compareFieldId', modifyField.id)
           }
         }
 
@@ -442,6 +448,7 @@ function T() {
         const { beforeCompare, compare: compareRecords, afterCompare } = getCompareRecords({ type: saveBy })
         beforeCompare();
         setLoadingTextByRef(`正在生成对比任务`);
+        setLoading(true);
         const choosedFieldIds = Object.values(restFields);
         const tasks = viewRecordsList.map((recordId) => async () => {
           /** record这一行，字段1和字段2的值，将记录的查找字段的值json作为对象的key */
@@ -500,7 +507,7 @@ function T() {
 
           Toast.error(JSON.stringify(error))
         }
-
+        setLoadingTextByRef('');
         afterCompare(async () => {
           try {
             if (toDelModifiedField.current) {
@@ -839,7 +846,7 @@ function T() {
           <div>
             <DelTable
               windowWidth={windowWidth}
-              setLoadingContent={setLoadingContent}
+              setLoadingContent={setLoadingTextByRef}
               setLoading={setLoading}
               getOnDel={onDel}
               key={resTime.current}
