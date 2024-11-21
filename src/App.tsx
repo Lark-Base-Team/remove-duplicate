@@ -17,10 +17,6 @@ const recordidValueMap: Map<string, {
   [fieldId: string]: IOpenCellValue;
 }> = new Map();
 
-/** 所有需要处理的记录id */
-let viewRecordsList: string[] = [];
-let tableRecordsList: string[] = [];
-
 function getRecordKey(recordId: string, fieldIds: string[], config: {
   ignoreSpace: boolean,
   fieldIdTypeObj: {
@@ -122,10 +118,11 @@ function T() {
     return setLoadingContent(text);
   }
 
-  const checkboxConfig = useRef({ findInCurrentView: false, ignoreSpace: true })
+  const checkboxConfig = useRef({ findInCurrentView: true, ignoreSpace: true })
 
   const currentViewConfig = useRef({
-    currentViewRecords: ['']
+    /** 当前需要处理的记录id */
+    currentTodoRecords: [''],
   })
 
   const [saveByField, setSaveByField] = useState('');
@@ -275,14 +272,7 @@ function T() {
           throw t('请打开一个表格视图')
         }
 
-        const viewMeta: IGridViewMeta = (await view.getMeta()) as IGridViewMeta;
-
-        let filter: IFilterInfo | undefined
-        if (checkboxConfig.current.findInCurrentView) {
-          filter = viewMeta.property.filterInfo ?? undefined;
-        }
-
-        tableRecordsList = await (async (table: ITable) => {
+        currentViewConfig.current.currentTodoRecords = await (async (table: ITable) => {
           let token = undefined as any;
           // setLoading(true);
           const recordIdList: string[] = [];
@@ -291,7 +281,7 @@ function T() {
             const currentPage = await table.getRecordsByPage({
               pageToken: token,
               pageSize: 200,
-              filter
+              viewId
             });
             token = currentPage.pageToken;
             hasMore = currentPage.hasMore;
@@ -306,29 +296,6 @@ function T() {
           return recordIdList
         })(table);
 
-        viewRecordsList = tableRecordsList;
-
-        if (checkboxConfig.current.findInCurrentView) {
-          viewRecordsList = await (async function getTodoRecords(view: IView) {
-            let hasMore = true;
-            let records: string[] = [];
-            let pageToken;
-            while (hasMore) {
-              const currentPage = await view.getVisibleRecordIdListByPage({
-                pageToken,
-              });
-              hasMore = currentPage.hasMore;
-              pageToken = currentPage.pageToken;
-              records.push(...currentPage.recordIds)
-            }
-
-            return records;
-          })(view)
-        }
-
-        currentViewConfig.current = {
-          currentViewRecords: viewRecordsList,
-        }
 
         /** 所有的比较字段 */
         restFields = JSON.parse(JSON.stringify(restFields));
@@ -411,7 +378,7 @@ function T() {
         //       return recordIdList
         //     })(f)
         //     if (findInCurrentView) {
-        //       return valueList.filter(({ record_id }) => currentViewConfig.current.currentViewRecords.includes(record_id as any))
+        //       return valueList.filter(({ record_id }) => currentViewConfig.current.currentTodoRecords.includes(record_id as any))
         //     }
 
         //     return valueList
@@ -452,7 +419,7 @@ function T() {
         setLoadingTextByRef(`正在生成对比任务`);
         setLoading(true);
         const choosedFieldIds = Object.values(restFields);
-        const tasks = viewRecordsList.map((recordId) => async () => {
+        const tasks = currentViewConfig.current.currentTodoRecords.map((recordId) => async () => {
           /** record这一行，字段1和字段2的值，将记录的查找字段的值json作为对象的key */
           // let key = JSON.stringify([
           //   ...identifyingFieldsValueList.map(
@@ -861,7 +828,7 @@ function T() {
               tableInfo={tableInfo}
               recordIdValueMap={recordidValueMap}
               resTime={resTime.current}
-              viewRecordsList={currentViewConfig.current.currentViewRecords}
+              viewRecordsList={currentViewConfig.current.currentTodoRecords}
               findInView={checkboxConfig.current.findInCurrentView}
             ></DelTable></div>
         ) : (
