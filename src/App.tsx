@@ -122,7 +122,7 @@ function T() {
     return setLoadingContent(text);
   }
 
-  const checkboxConfig = useRef({ findInCurrentView: true, ignoreSpace: true })
+  const checkboxConfig = useRef({ findInCurrentView: false, ignoreSpace: true })
 
   const currentViewConfig = useRef({
     currentViewRecords: ['']
@@ -277,8 +277,10 @@ function T() {
 
         const viewMeta: IGridViewMeta = (await view.getMeta()) as IGridViewMeta;
 
-        const filter = viewMeta.property.filterInfo ?? undefined;
-
+        let filter: IFilterInfo | undefined
+        if (checkboxConfig.current.findInCurrentView) {
+          filter = viewMeta.property.filterInfo ?? undefined;
+        }
 
         tableRecordsList = await (async (table: ITable) => {
           let token = undefined as any;
