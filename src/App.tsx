@@ -216,7 +216,7 @@ function T() {
         {
           const modifyField = fieldInfo?.fieldMetaList.find((f) => f.type === FieldType.CreatedTime);
           if (!modifyField) {
-            formApi.current.setError('saveBy', `请在多维表格中添加一个“创建时间”字段`);
+            formApi.current.setError('saveBy', t('please.add.create.time'));
             return
           } else {
             formApi.current.setValue('compareFieldId', modifyField.id)
@@ -229,7 +229,7 @@ function T() {
         {
           const modifyField = fieldInfo?.fieldMetaList.find((f) => f.type === FieldType.ModifiedTime);
           if (!modifyField) {
-            formApi.current.setError('saveBy', `请在多维表格中添加一个“最后更新时间”字段`);
+            formApi.current.setError('saveBy', t('please.add.modify.time'));
             return
           } else {
             formApi.current.setValue('compareFieldId', modifyField.id)
