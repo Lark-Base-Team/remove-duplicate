@@ -31,6 +31,8 @@
   "CompareType.SaveBySmaller.label": "カスタムフィールドの値が小さいレコードを保持",
   "find.in.current.view": "現在のビュー内で検索",
   "find.in.current.ignoreSpace": "空白文字を無視",
+  "please.add.create.time": "多次元テーブルに【作成日時】フィールドを追加し、プラグインを更新してください。",
+  "please.add.modify.time": "多次元テーブルに【最終更新日時】フィールドを追加し、プラグインを更新してください。",
   "info.has.no.deletePermission": "レコードを削除する権限がありません",
   "CompareType.SaveByBiggerField.label.desc": "特定のフィールドaを選択し、これらの同じレコードの中で、フィールドaの値が大きいレコードを保持します",
   "CompareType.SaveBySmaller.label.desc": "特定のフィールドaを選択し、これらの同じレコードの中で、フィールドaの値が小さいレコードを保持します"

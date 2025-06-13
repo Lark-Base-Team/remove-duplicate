@@ -32,6 +32,8 @@
   "find.in.current.view": "Find within the current view",
   "find.in.current.ignoreSpace": "Ignore whitespace characters",
   "info.has.no.deletePermission": "No permission to delete records",
+  "please.add.create.time": "Please add a 'Date Created' field in the multidimensional table, and refresh the plugin",
+  "please.add.modify.time": "Please add a 'Last Modified Date' field in the multidimensional table, and refresh the plugin",
   "CompareType.SaveByBiggerField.label.desc": "Select a certain field a, and among these same records, keep the record with the larger value of field a",
   "CompareType.SaveBySmaller.label.desc": "Select a certain field a, and among these same records, keep the record with a smaller value for field a"
 }
